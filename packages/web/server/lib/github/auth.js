@@ -1,10 +1,11 @@
 import fs from 'fs';
 import path from 'path';
-import os from 'os';
+
+import { getDefaultDataDir } from '../data-dir.js';
 
 const OPENCHAMBER_DATA_DIR = process.env.OPENCHAMBER_DATA_DIR
   ? path.resolve(process.env.OPENCHAMBER_DATA_DIR)
-  : path.join(os.homedir(), '.config', 'openchamber');
+  : getDefaultDataDir();
 
 const STORAGE_DIR = OPENCHAMBER_DATA_DIR;
 const STORAGE_FILE = path.join(STORAGE_DIR, 'github-auth.json');

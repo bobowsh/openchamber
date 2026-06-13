@@ -259,9 +259,11 @@ const maybeCacheSessionInfoFromEvent = (...args) => notificationTemplateRuntime.
 const buildTemplateVariables = (...args) => notificationTemplateRuntime.buildTemplateVariables(...args);
 const getCachedZenModels = (...args) => notificationTemplateRuntime.getCachedZenModels(...args);
 
+import { getDefaultDataDir } from './lib/data-dir.js';
+
 const OPENCHAMBER_DATA_DIR = process.env.OPENCHAMBER_DATA_DIR
   ? path.resolve(process.env.OPENCHAMBER_DATA_DIR)
-  : path.join(os.homedir(), '.config', 'openchamber');
+  : getDefaultDataDir();
 const SETTINGS_FILE_PATH = path.join(OPENCHAMBER_DATA_DIR, 'settings.json');
 const PUSH_SUBSCRIPTIONS_FILE_PATH = path.join(OPENCHAMBER_DATA_DIR, 'push-subscriptions.json');
 const REMOTE_CLIENTS_FILE_PATH = path.join(OPENCHAMBER_DATA_DIR, 'remote-clients.json');

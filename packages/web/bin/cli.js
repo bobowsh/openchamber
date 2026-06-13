@@ -11,6 +11,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import { isModuleCliExecution } from './cli-entry.js';
 import { cloudflareTunnelProviderCapabilities } from '../server/lib/tunnels/providers/cloudflare.js';
 import { createRemoteClientAuthRuntime } from '../server/lib/client-auth/remote-clients.js';
+import { getDefaultDataDir } from '../server/lib/data-dir.js';
 import {
   intro as clackIntro, outro as clackOutro, log as clackLog,
   box as clackBox, confirm as clackConfirm,
@@ -26,8 +27,21 @@ import {
   logStatus, formatProviderWithIcon as clackFormatProviderWithIcon,
 } from './cli-output.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = (() => {
+  const builtinDir = path.dirname(fileURLToPath(import.meta.url));
+  // 正常源文件模式：bin/ 同级有 package.json
+  if (fs.existsSync(path.join(builtinDir, '..', 'package.json'))) return builtinDir;
+  // 编译二进制模式：process.execPath 是 exe 的实际路径
+  const exePath = process.execPath;
+  if (exePath) {
+    const exeDir = path.dirname(exePath);
+    // 尝试 exe 所在目录或其 bin/ 子目录，看哪个能让 ../package.json 正确解析
+    for (const dir of [exeDir, path.join(exeDir, 'bin')]) {
+      if (fs.existsSync(path.join(dir, '..', 'package.json'))) return dir;
+    }
+  }
+  return builtinDir;
+})();
 
 const DEFAULT_PORT = 3000;
 const DEFAULT_TAIL_LINES = 200;
@@ -1367,7 +1381,7 @@ function getDataDir() {
   if (typeof process.env.OPENCHAMBER_DATA_DIR === 'string' && process.env.OPENCHAMBER_DATA_DIR.trim().length > 0) {
     return path.resolve(process.env.OPENCHAMBER_DATA_DIR.trim());
   }
-  return path.join(os.homedir(), '.config', 'openchamber');
+  return getDefaultDataDir();
 }
 
 function getLogsDir() {

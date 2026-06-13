@@ -378,11 +378,18 @@ const refreshQuitRiskFlags = async () => {
   }
 };
 
+const defaultDataDir = (() => {
+  if (app.isPackaged) {
+    return path.join(path.dirname(process.execPath), '.config', 'openchamber');
+  }
+  return path.join(path.dirname(fileURLToPath(import.meta.url)), '.config', 'openchamber');
+})();
+
 const settingsFilePath = () => {
   if (typeof process.env.OPENCHAMBER_DATA_DIR === 'string' && process.env.OPENCHAMBER_DATA_DIR.trim()) {
     return path.join(process.env.OPENCHAMBER_DATA_DIR.trim(), 'settings.json');
   }
-  return path.join(os.homedir(), '.config', 'openchamber', 'settings.json');
+  return path.join(defaultDataDir, 'settings.json');
 };
 
 const sshManager = new ElectronSshManager({
@@ -1097,6 +1104,9 @@ const spawnLocalServer = async () => {
     homedir: () => os.homedir(),
   });
   process.env.OPENCHAMBER_DESKTOP_NOTIFY = 'true';
+  if (!process.env.OPENCHAMBER_DATA_DIR) {
+    process.env.OPENCHAMBER_DATA_DIR = defaultDataDir;
+  }
   if (desktopUiPassword) {
     process.env.OPENCHAMBER_UI_PASSWORD = desktopUiPassword;
   } else {

@@ -352,9 +352,11 @@ const normalizePassword = (candidate) => {
 
 const isTrustedDeviceRequest = (value) => value === true;
 
+import { getDefaultDataDir } from '../data-dir.js';
+
 const OPENCHAMBER_DATA_DIR = process.env.OPENCHAMBER_DATA_DIR
   ? path.resolve(process.env.OPENCHAMBER_DATA_DIR)
-  : path.join(os.homedir(), '.config', 'openchamber');
+  : getDefaultDataDir();
 const JWT_SECRET_FILE = path.join(OPENCHAMBER_DATA_DIR, 'jwt-secret');
 
 function getOrCreateJwtSecret() {
