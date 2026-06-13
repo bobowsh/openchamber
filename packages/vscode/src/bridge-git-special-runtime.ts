@@ -330,7 +330,7 @@ export async function handleSpecialGitBridgeMessage(
         return { id, type, success: false, error: 'No diffs available for selected files' };
       }
 
-      const prompt = `You are drafting a GitHub Pull Request title + description. Respond in JSON of the shape {"title": string, "body": string} (ONLY JSON in response, no markdown fences) with these rules:\n- title: concise, sentence case, <= 80 chars, no trailing punctuation, no commit-style prefixes (no "feat:", "fix:")\n- body: GitHub-flavored markdown with these sections in this order: Summary, Testing, Notes\n- Summary: 3-6 bullet points describing user-visible changes; avoid internal helper function names\n- Testing: bullet list ("- Not tested" allowed)\n- Notes: bullet list; include breaking/rollout notes only when relevant\n\nContext:\n- base branch: ${base}\n- head branch: ${head}${context?.trim() ? `\n- Additional context: ${context.trim()}` : ''}\n\nDiff summary:\n${diffSummaries}`;
+      const prompt = `你正在为 GitHub Pull Request 起草标题和描述。请以 JSON 格式返回：{"title": string, "body": string}（仅返回纯 JSON，不要 markdown 代码块），规则如下：\n- title：简洁，句子式大小写，不超过 80 字符，末尾无标点，不使用提交式前缀（不要 "feat:"、"fix:"）\n- body：使用 GitHub 风格 markdown，按以下顺序包含三个章节：Summary、Testing、Notes\n- Summary：3-6 条要点描述用户可见的变更；避免内部辅助函数名\n- Testing：要点列表（允许 "- Not tested"）\n- Notes：要点列表；仅在必要时包含破坏性变更/发布相关说明\n\n上下文信息：\n- 基准分支：${base}\n- 目标分支：${head}${context?.trim() ? `\n- 额外上下文：${context.trim()}` : ''}\n\n差异摘要：\n${diffSummaries}`;
 
       try {
         const apiUrl = ctx?.manager?.getApiUrl();

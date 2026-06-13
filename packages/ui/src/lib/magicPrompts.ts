@@ -51,7 +51,7 @@ export interface MagicPromptDefinition {
   id: MagicPromptId;
   title: string;
   description: string;
-  group: 'Git' | 'GitHub' | 'Planning' | 'Session';
+  group: 'Git' | 'GitHub' | '规划' | '会话';
   template: string;
   placeholders?: Array<{ key: string; description: string }>;
 }
@@ -66,787 +66,787 @@ const API_ENDPOINT = '/api/magic-prompts';
 export const MAGIC_PROMPT_DEFINITIONS: readonly MagicPromptDefinition[] = [
   {
     id: 'git.commit.generate.visible',
-    title: 'Commit Generation Visible Prompt',
+    title: '提交生成可见提示',
     group: 'Git',
-    description: 'Visible user message for commit message generation.',
-    template: 'You are generating a Conventional Commits subject line using session context and selected file paths.',
+    description: '用于生成提交消息的可见用户提示。',
+    template: '你正在根据会话上下文和所选文件路径生成 Conventional Commits 主题行。',
   },
   {
     id: 'git.commit.generate.instructions',
-    title: 'Commit Generation Instructions',
+    title: '提交生成指令',
     group: 'Git',
-    description: 'Hidden instructions for commit message generation.',
+    description: '用于生成提交消息的隐藏指令。',
     placeholders: [
-      { key: 'selected_files', description: 'Bullet list of currently selected file paths.' },
+      { key: 'selected_files', description: '当前所选文件路径的列表。' },
     ],
-    template: `Return exactly one JSON object and nothing else. Do not include prose, markdown, explanations, or code fences.
+    template: `只返回一个 JSON 对象，不包含其他任何内容。不要包含散文、markdown、解释或代码围栏。
 
-The JSON object must have exactly this shape:
+JSON 对象必须具有以下精确结构：
 {"subject": string, "highlights": string[]}
 
-Rules:
-- subject format: <type>: <summary>
-- allowed types: feat, fix, refactor, perf, docs, test, build, ci, chore, style, revert
-- no scope in subject
-- keep subject concise and user-facing
-- highlights: 0-3 concise user-facing points
-- use double quotes for all JSON strings
-- do not include trailing commas or comments
+规则：
+- subject 格式：<type>: <summary>
+- 允许的类型：feat, fix, refactor, perf, docs, test, build, ci, chore, style, revert
+- subject 中不包含 scope
+- 保持 subject 简洁且面向用户
+- highlights：0-3 个简洁的面向用户的要点
+- 所有 JSON 字符串使用双引号
+- 不要包含尾随逗号或注释
 
-Selected files:
+所选文件：
 {{selected_files}}`,
   },
   {
     id: 'git.pr.generate.visible',
-    title: 'PR Generation Visible Prompt',
+    title: 'PR 生成可见提示',
     group: 'Git',
-    description: 'Visible user message for PR title/body generation.',
-    template: 'You are drafting GitHub Pull Request title and body using session context, commit list, and changed files.',
+    description: '用于生成 PR 标题/正文的可见用户提示。',
+    template: '你正在根据会话上下文、提交列表和变更文件起草 GitHub Pull Request 标题和正文。',
   },
   {
     id: 'git.pr.generate.instructions',
-    title: 'PR Generation Instructions',
+    title: 'PR 生成指令',
     group: 'Git',
-    description: 'Hidden instructions for PR title/body generation.',
+    description: '用于生成 PR 标题/正文的隐藏指令。',
     placeholders: [
-      { key: 'base_branch', description: 'Base branch name.' },
-      { key: 'head_branch', description: 'Head branch name.' },
-      { key: 'commits', description: 'Bullet list of commits in base...head.' },
-      { key: 'changed_files', description: 'Bullet list of changed files in base...head.' },
-      { key: 'additional_context_block', description: 'Optional Additional context block (already formatted).' },
+      { key: 'base_branch', description: '目标分支名称。' },
+      { key: 'head_branch', description: '源分支名称。' },
+      { key: 'commits', description: 'base...head 范围内的提交列表。' },
+      { key: 'changed_files', description: 'base...head 范围内的变更文件列表。' },
+      { key: 'additional_context_block', description: '可选的附加上下文块（已格式化）。' },
     ],
-    template: `Return exactly one JSON object and nothing else. Do not include prose, markdown outside JSON, explanations, or code fences.
+    template: `只返回一个 JSON 对象，不包含其他任何内容。不要在 JSON 之外包含散文、markdown、解释或代码围栏。
 
-The JSON object must have exactly this shape:
+JSON 对象必须具有以下精确结构：
 {"title": string, "body": string}
 
-Rules:
-- title: concise, outcome-first, conventional style
-- body: markdown with sections: ## Summary, ## Why, ## Testing
-- keep output concrete and user-facing
-- put all markdown inside the body string
-- use double quotes for all JSON strings and escape newlines as \\n
-- do not include trailing commas or comments
+规则：
+- title：简洁、结果优先、常规风格
+- body：带章节的 markdown：## Summary、## Why、## Testing
+- 输出要具体且面向用户
+- 所有 markdown 放在 body 字符串内
+- 所有 JSON 字符串使用双引号，换行符转义为 \\n
+- 不要包含尾随逗号或注释
 
-Base branch: {{base_branch}}
-Head branch: {{head_branch}}
+目标分支：{{base_branch}}
+源分支：{{head_branch}}
 
-Commits in range (base...head):
+范围内的提交（base...head）：
 {{commits}}
 
-Files changed across these commits:
+这些提交中变更的文件：
 {{changed_files}}{{additional_context_block}}`,
   },
   {
     id: 'github.pr.review.visible',
-    title: 'PR Review Visible Prompt',
+    title: 'PR 审查可见提示',
     group: 'GitHub',
-    description: 'Visible user message when creating PR review requests from GitHub context.',
+    description: '从 GitHub 上下文创建 PR 审查请求时使用的可见用户提示。',
     placeholders: [
-      { key: 'pr_number', description: 'Pull request number.' },
+      { key: 'pr_number', description: '拉取请求编号。' },
     ],
-    template: 'Review this pull request #{{pr_number}} using the provided PR context',
+    template: '根据提供的 PR 上下文审查此拉取请求 #{{pr_number}}',
   },
   {
     id: 'github.pr.review.instructions',
-    title: 'PR Review Instructions',
+    title: 'PR 审查指令',
     group: 'GitHub',
-    description: 'Hidden instructions attached when generating a PR review response.',
-    template: `You are drafting a pull request review comment that will be posted back to the PR author. You are not the implementer; do not propose to write code or run commands.
+    description: '生成 PR 审查回复时附加的隐藏指令。',
+    template: `你正在起草一条将发回给 PR 作者的拉取请求审查评论。你不是实施者；不要提议编写代码或运行命令。
 
-Before drafting:
-- Read the PR title and body first to anchor on the author's intent. Evaluate whether the implementation matches that intent — missing pieces, incorrect behavior vs intent, scope creep.
-- The PR diff is the source of truth for what changed; the repo on disk may not yet reflect those changes. Read the diff carefully. Use the repo only as ancillary context (imports, call sites, existing patterns, nearby code) when you need to verify a specific claim — not to discover the changes themselves.
-- No speculation: every reported issue must be grounded in the diff plus ancillary repo evidence you actually read. If a claim cannot be verified, drop it — do not hedge or guess.
-- Clarifying question: if the PR's intent itself is unreadable (title/body give no "why", diff is ambiguous on purpose), ask me one focused question about intent and stop. Do not open a discovery loop — this is a review, not a planning session.
+起草前：
+- 先阅读 PR 标题和正文以理解作者的意图。评估实现是否匹配该意图——遗漏的部分、与意图不符的行为、范围蔓延。
+- PR diff 是变更的唯一真实来源；磁盘上的仓库可能尚未反映这些变更。仔细阅读 diff。仅在需要验证特定声明时，才将仓库用作辅助上下文（导入、调用点、现有模式、附近代码）——而不是用于发现变更本身。
+- 不要推测：每个报告的问题必须基于你实际读过的 diff 加上辅助仓库证据。如果某个声明无法验证，则放弃——不要含糊其辞或猜测。
+- 澄清性问题：如果 PR 本身意图不明确（标题/正文没有说明"为什么"，diff 故意模棱两可），请就此意图向我提出一个聚焦的问题，然后停止。不要开启发现循环——这是审查，不是规划会议。
 
-High-signal bar — only report issues that meet all of:
-- Objective and verifiable from the diff plus ancillary repo evidence.
-- Introduced by this PR (not pre-existing).
-- Material: bugs that will cause incorrect runtime behavior, security/privacy risks, correctness edge cases, backwards-compat breakage, missing implementations across modules/targets, boundary violations, OR a clear CLAUDE.md / AGENTS.md violation where you can quote the exact rule.
+高信号门槛——只报告满足以下所有条件的问题：
+- 客观且可通过 diff 加辅助仓库证据验证。
+- 由本 PR 引入（不是预先存在的）。
+- 实质性：会导致运行时行为不正确的 bug、安全/隐私风险、正确性边界情况、向后兼容性破坏、跨模块/目标的实现缺失、边界违反，或者明确的 CLAUDE.md / AGENTS.md 违规（你可引用具体规则）。
 
-Do NOT report:
-- Pre-existing issues unrelated to the diff.
-- Pedantic nitpicks a senior engineer would not flag.
-- Issues a linter would catch.
-- Subjective style preferences not explicitly required by CLAUDE.md / AGENTS.md.
-- "Might" / "could" / "potential" concerns without concrete evidence.
-- Rules mentioned in CLAUDE.md / AGENTS.md but explicitly silenced in the code (e.g., via an ignore comment or documented exception).
-- Missing tests / coverage gaps unless CLAUDE.md / AGENTS.md explicitly requires them for the changed area.
+不要报告：
+- 与 diff 无关的预先存在的问题。
+- 高级工程师不会指出的迂腐吹毛求疵。
+- linter 能发现的问题。
+- CLAUDE.md / AGENTS.md 未明确要求的主观风格偏好。
+- 没有具体证据的"可能"/"也许"/"潜在"担忧。
+- CLAUDE.md / AGENTS.md 中提及但代码中明确静默的规则（例如通过忽略注释或记录的例外）。
+- 缺失的测试/覆盖率缺口，除非 CLAUDE.md / AGENTS.md 明确要求变更区域需要。
 
-Validation pass: before writing the final comment, re-check each candidate issue against the diff + ancillary repo evidence. Drop anything you are not certain about. False positives waste the author's time.
+验证环节：在编写最终评论前，对照 diff + 辅助仓库证据重新检查每个候选问题。放弃任何你不确定的内容。误报会浪费作者的时间。
 
-Output rules:
-- Produce a single review comment addressed to the PR author, using the exact format below.
-- No emojis. No code snippets. No fenced blocks. Short inline code identifiers are fine.
-- Reference evidence with file paths and line ranges (e.g., path/to/file.ts:120-138) derived from the diff. Use "approx" only as a last resort when the diff does not expose exact lines.
-- One bullet per unique issue; do not duplicate an issue across sections.
-- Keep the whole comment under ~300 words.
+输出规则：
+- 生成一条发给 PR 作者的单一审查评论，使用以下精确格式。
+- 不使用 emoji。不使用代码片段。不使用围栏块。简短的内联代码标识符可以。
+- 引用基于 diff 的文件路径和行范围（例如 path/to/file.ts:120-138）。仅当 diff 未暴露确切行时，才作为最后手段使用"approx"。
+- 每个独特问题一个要点；不要跨章节重复问题。
+- 整条评论保持在 ~300 词以内。
 
-Format exactly:
-<1-2 sentence summary of intent and top-level verdict>
+精确格式：
+<1-2 句意图和总体结论摘要>
 
-Must-fix:
-- <issue> - <brief why> - <file:line-range> - Action: <one-line action>
-Nice-to-have:
-- <issue> - <brief why> - <file:line-range> - Action: <one-line action>
+Must-fix：
+- <问题> - <简要原因> - <文件:行范围> - 操作：<一行操作>
+Nice-to-have：
+- <问题> - <简要原因> - <文件:行范围> - 操作：<一行操作>
 
-If nothing clears the high-signal bar, write:
-Must-fix:
+如果没有问题达到高信号门槛，则写：
+Must-fix：
 - None
-Nice-to-have:
+Nice-to-have：
 - None`,
   },
   {
     id: 'github.issue.review.visible',
-    title: 'Issue Review Visible Prompt',
+    title: 'Issue 审查可见提示',
     group: 'GitHub',
-    description: 'Visible user message when creating issue review requests from GitHub context.',
+    description: '从 GitHub 上下文创建 Issue 审查请求时使用的可见用户提示。',
     placeholders: [
-      { key: 'issue_number', description: 'Issue number.' },
+      { key: 'issue_number', description: 'Issue 编号。' },
     ],
-    template: 'Review this issue #{{issue_number}} using the provided issue context',
+    template: '根据提供的 Issue 上下文审查此 Issue #{{issue_number}}',
   },
   {
     id: 'github.issue.review.instructions',
-    title: 'Issue Review Instructions',
+    title: 'Issue 审查指令',
     group: 'GitHub',
-    description: 'Hidden instructions attached when generating an issue review response.',
-    template: `Review this issue using the provided issue context.
+    description: '生成 Issue 审查回复时附加的隐藏指令。',
+    template: `使用提供的 Issue 上下文审查此 Issue。
 
-Process:
-- First classify the issue type (bug / feature request / question/support / refactor / ops) and state it as: Type: <one label>.
-- Gather any needed repository context (code, config, docs) to validate assumptions.
-- After gathering, if anything is still unclear or cannot be verified, do not speculate — state what's missing and ask targeted questions.
+流程：
+- 首先分类 Issue 类型（bug / feature request / question/support / refactor / ops）并说明：类型：<一个标签>。
+- 收集所需的仓库上下文（代码、配置、文档）以验证假设。
+- 收集后，如果仍有任何不明确或无法验证的内容，不要推测——说明缺失了什么并提出有针对性的问题。
 
-Mode selection by type:
-- Bug / Question/Support / Ops: deliver the response directly using the matching template below. Do not bombard me with questions for straightforward diagnosis; use "Missing info" / "Repro/diagnostics needed" fields instead.
-- Feature request / Refactor with substantive unknowns: this is effectively a planning session. Do not emit the Feature template on the first turn. Instead, ask me focused clarifying questions in batches of at most 3, one topic at a time (scope, constraints, tradeoffs, UX, etc.), wait for answers, drop questions that became irrelevant, and repeat until you have no more substantive questions. Only then emit the Feature template.
+按类型选择模式：
+- Bug / Question/Support / Ops：直接使用下方的匹配模板给出回复。对于直接诊断，不要用问题轰炸我；改用"缺失信息"/"需要复现/诊断"字段。
+- Feature request / Refactor 且存在实质性未知项：这实际上是一个规划会议。不要在第一轮就输出 Feature 模板。而是分批向我提出聚焦的澄清性问题，每批最多 3 个，一次一个主题（范围、约束、权衡、UX 等），等待回答，放弃已不相关的问题，重复直到没有更多实质性问题。然后才输出 Feature 模板。
 
-Output rules:
-- Compact output; pick ONE template below and omit the others.
-- No emojis. No code snippets. No fenced blocks.
-- Short inline code identifiers allowed.
-- Reference evidence with file paths and line ranges when applicable; if exact lines are not available, cite the file and say "approx" + why.
-- Keep the entire response under ~300 words (applies to the final template output, not to clarifying-question turns).
+输出规则：
+- 紧凑输出；选择下方一个模板，省略其他。
+- 不使用 emoji。不使用代码片段。不使用围栏块。
+- 简短的内联代码标识符可以。
+- 引用基于 diff 的文件路径和行范围；如果确切行不可用，引用文件并说明"approx"及原因。
+- 整个回复保持在 ~300 词以内（适用于最终模板输出，不适用于澄清性问题的轮次）。
 
-Templates (choose one):
-Bug:
-- Summary (1-2 sentences)
-- Likely cause (max 2)
-- Repro/diagnostics needed (max 3)
-- Fix approach (max 4 steps)
-- Verification (max 3)
+模板（选择一个）：
+Bug：
+- 摘要（1-2 句）
+- 可能原因（最多 2 个）
+- 需要复现/诊断（最多 3 个）
+- 修复方案（最多 4 步）
+- 验证（最多 3 个）
 
-Feature:
-- Summary (1-2 sentences)
-- Requirements (max 4)
-- Unknowns/questions (max 4)
-- Proposed plan (max 5 steps)
-- Verification (max 3)
+Feature：
+- 摘要（1-2 句）
+- 需求（最多 4 个）
+- 未知项/问题（最多 4 个）
+- 建议方案（最多 5 步）
+- 验证（最多 3 个）
 
-Question/Support:
-- Summary (1-2 sentences)
-- Answer/guidance (max 6 lines)
-- Missing info (max 4)
+Question/Support：
+- 摘要（1-2 句）
+- 回答/指导（最多 6 行）
+- 缺失信息（最多 4 个）
 
-Do not implement changes until I confirm; end with: "Next actions: <1 sentence>".`,
+在我确认之前不要实施变更；结束时写上："后续操作：<1 句话>"。`,
   },
   {
     id: 'github.pr.checks.review.visible',
-    title: 'PR Failed Checks Visible Prompt',
+    title: 'PR 检查失败可见提示',
     group: 'GitHub',
-    description: 'Visible user message for PR failed checks analysis.',
-    template: 'Review these PR failed checks and propose likely fixes. Do not implement until I confirm.',
+    description: '用于 PR 检查失败分析的可见用户提示。',
+    template: '审查这些 PR 检查失败项并提出可能的修复方案。在我确认之前不要实施。',
   },
   {
     id: 'github.pr.checks.review.instructions',
-    title: 'PR Failed Checks Instructions',
+    title: 'PR 检查失败指令',
     group: 'GitHub',
-    description: 'Hidden instructions for PR failed checks analysis.',
-    template: `Use the attached checks payload.
-- Summarize what is failing.
-- Prioritize check annotations/errors over generic status text.
-- Identify likely root cause(s).
-- Propose a minimal fix plan and verification steps.
-- No speculation: ask for missing info if needed.`,
+    description: '用于 PR 检查失败分析的隐藏指令。',
+    template: `使用附带的检查结果数据。
+- 总结正在失败的内容。
+- 优先检查注释/错误信息而非通用状态文本。
+- 确定可能的根本原因。
+- 提出最小修复方案和验证步骤。
+- 不要推测：需要时询问缺失信息。`,
   },
   {
     id: 'github.pr.comments.review.visible',
-    title: 'PR Comments Review Visible Prompt',
+    title: 'PR 评论审查可见提示',
     group: 'GitHub',
-    description: 'Visible user message for PR comments analysis.',
-    template: 'Review these PR comments and propose the required changes and next actions. Do not implement until I confirm.',
+    description: '用于 PR 评论分析的可见用户提示。',
+    template: '审查这些 PR 评论并提出所需的变更和后续操作。在我确认之前不要实施。',
   },
   {
     id: 'github.pr.comments.review.instructions',
-    title: 'PR Comments Review Instructions',
+    title: 'PR 评论审查指令',
     group: 'GitHub',
-    description: 'Hidden instructions for PR comments analysis.',
-    template: `Use the attached comments payload.
-- Identify required vs optional changes.
-- Call out intent/implementation mismatch if present.
-- Before proposing a plan: if a comment's intent is ambiguous, or the required change depends on a tradeoff only I can decide, ask me focused clarifying questions in batches of at most 3 and wait for answers. Do not speculate.
-- Once intent is clear, propose a minimal plan and verification steps.`,
+    description: '用于 PR 评论分析的隐藏指令。',
+    template: `使用附带的评论数据。
+- 区分必须修改和可选修改。
+- 如果存在意图/实现不匹配，指出来。
+- 在提出方案前：如果评论的意图不明确，或者所需的修改取决于只有我能决定的权衡，请分批向我提出聚焦的澄清性问题，每批最多 3 个，等待回答。不要推测。
+- 一旦意图明确，提出最小方案和验证步骤。`,
   },
   {
     id: 'github.pr.comment.single.visible',
-    title: 'Single PR Comment Visible Prompt',
+    title: '单条 PR 评论可见提示',
     group: 'GitHub',
-    description: 'Visible user message for single PR comment analysis.',
-    template: 'Address this comment from PR and propose required changes. Do not implement until I confirm.',
+    description: '用于单条 PR 评论分析的可见用户提示。',
+    template: '回应此 PR 评论并提出所需的变更。在我确认之前不要实施。',
   },
   {
     id: 'github.pr.comment.single.instructions',
-    title: 'Single PR Comment Instructions',
+    title: '单条 PR 评论指令',
     group: 'GitHub',
-    description: 'Hidden instructions for single PR comment analysis.',
-    template: `Use the attached single-comment payload.
-- Explain what the reviewer is asking for.
-- Identify exact code areas likely impacted.
-- Before proposing a plan: if the reviewer's intent is ambiguous or the required change depends on a tradeoff only I can decide, ask me focused clarifying questions in batches of at most 3 and wait for answers. Do not speculate.
-- Once intent is clear, propose a minimal implementation plan and verification steps.`,
+    description: '用于单条 PR 评论分析的隐藏指令。',
+    template: `使用附带的单条评论数据。
+- 说明审查者要求什么。
+- 确定可能受影响的确切代码区域。
+- 在提出方案前：如果审查者的意图不明确，或者所需的修改取决于只有我能决定的权衡，请分批向我提出聚焦的澄清性问题，每批最多 3 个，等待回答。不要推测。
+- 一旦意图明确，提出最小实施方案和验证步骤。`,
   },
   {
     id: 'git.conflict.resolve.visible',
-    title: 'Merge/Rebase Conflict Visible Prompt',
+    title: '合并/变基冲突可见提示',
     group: 'Git',
-    description: 'Visible user message for merge/rebase conflict resolution help.',
+    description: '用于合并/变基冲突解决的可见用户提示。',
     placeholders: [
-      { key: 'operation_label', description: 'Operation label in lower-case (merge/rebase).' },
-      { key: 'head_ref', description: 'Head reference for preserving intent.' },
+      { key: 'operation_label', description: '操作标签，小写（merge/rebase）。' },
+      { key: 'head_ref', description: '用于保留意图的源引用。' },
     ],
-    template: 'Investigate the {{operation_label}} conflicts and concisely report the intended resolution strategy without making modifications. Wait for confirmation before resolving, staging, or continuing the {{operation_label}}. Preserve the intent of changes from {{head_ref}}.',
+    template: '调查 {{operation_label}} 冲突并简洁地报告预期的解决策略，不做任何修改。等待确认后再解决、暂存或继续 {{operation_label}}。保留来自 {{head_ref}} 的变更意图。',
   },
   {
     id: 'git.conflict.resolve.instructions',
-    title: 'Merge/Rebase Conflict Instructions',
+    title: '合并/变基冲突指令',
     group: 'Git',
-    description: 'Hidden instructions for merge/rebase conflict resolution help.',
+    description: '用于合并/变基冲突解决的隐藏指令。',
     placeholders: [
-      { key: 'operation_label', description: 'Operation label in lower-case (merge/rebase).' },
-      { key: 'directory', description: 'Repository directory path.' },
-      { key: 'operation', description: 'Operation name.' },
-      { key: 'head_info', description: 'Head metadata if available.' },
-      { key: 'continue_cmd', description: 'Command to continue operation.' },
+      { key: 'operation_label', description: '操作标签，小写（merge/rebase）。' },
+      { key: 'directory', description: '仓库目录路径。' },
+      { key: 'operation', description: '操作名称。' },
+      { key: 'head_info', description: '头部元数据（如有）。' },
+      { key: 'continue_cmd', description: '继续操作的命令。' },
     ],
-    template: `Git {{operation_label}} operation is in progress with conflicts.
-- Directory: {{directory}}
-- Operation: {{operation}}
-- Head Info: {{head_info}}
+    template: `Git {{operation_label}} 操作正在进行中，存在冲突。
+- 目录：{{directory}}
+- 操作：{{operation}}
+- 头部信息：{{head_info}}
 
-Required steps before confirmation:
-1. Read each conflicted file to understand the conflict markers (<<<<<<< HEAD, =======, >>>>>>> ...)
-2. Inspect the relevant surrounding code and changes from both sides
-3. Report a concise per-file resolution strategy and any assumptions or tradeoffs
-4. Wait for explicit user confirmation before editing files, staging files, or running: {{continue_cmd}}
+确认前必须完成的步骤：
+1. 阅读每个冲突文件以理解冲突标记（<<<<<<< HEAD、=======、>>>>>>> ...）
+2. 检查双方的相关周围代码和变更
+3. 报告每个文件的简洁解决策略以及任何假设或权衡
+4. 等待用户明确确认后再编辑文件、暂存文件或运行：{{continue_cmd}}
 
-Important:
-- Do not modify files before the user confirms the proposed strategy
-- Do not stage files before the user confirms the proposed strategy
-- Do not continue the {{operation_label}} before the user confirms the proposed strategy
-- Remove ALL conflict markers from files (<<<<<<< HEAD, =======, >>>>>>>)
-- Make sure the final code is syntactically correct and preserves intent from both sides
-- Do not leave any files with unresolved conflict markers
-- After completing all steps, confirm the {{operation_label}} was successful`,
+重要事项：
+- 在用户确认建议策略前不要修改文件
+- 在用户确认建议策略前不要暂存文件
+- 在用户确认建议策略前不要继续 {{operation_label}}
+- 从文件中删除所有冲突标记（<<<<<<< HEAD、=======、>>>>>>>）
+- 确保最终代码语法正确并保留双方的意图
+- 不要留下任何包含未解决冲突标记的文件
+- 完成所有步骤后，确认 {{operation_label}} 已成功`,
   },
   {
     id: 'git.integrate.cherrypick.resolve.visible',
-    title: 'Cherry-pick Conflict Visible Prompt',
+    title: 'Cherry-pick 冲突可见提示',
     group: 'Git',
-    description: 'Visible user message for cherry-pick conflict resolution help.',
+    description: '用于 cherry-pick 冲突解决的可见用户提示。',
     placeholders: [
-      { key: 'current_commit', description: 'Current commit hash being applied.' },
-      { key: 'target_branch', description: 'Target branch name.' },
+      { key: 'current_commit', description: '当前正在应用的提交哈希。' },
+      { key: 'target_branch', description: '目标分支名称。' },
     ],
-    template: 'Resolve cherry-pick conflicts, stage the resolved files, and continue the cherry-pick. Keep intent of commit {{current_commit}} onto branch {{target_branch}}.',
+    template: '解决 cherry-pick 冲突，暂存已解决的文件并继续 cherry-pick。保留提交 {{current_commit}} 到分支 {{target_branch}} 的意图。',
   },
   {
     id: 'git.integrate.cherrypick.resolve.instructions',
-    title: 'Cherry-pick Conflict Instructions',
+    title: 'Cherry-pick 冲突指令',
     group: 'Git',
-    description: 'Hidden instructions for cherry-pick conflict resolution help.',
+    description: '用于 cherry-pick 冲突解决的隐藏指令。',
     placeholders: [
-      { key: 'repo_root', description: 'Repository root path.' },
-      { key: 'temp_worktree_path', description: 'Temporary worktree path.' },
-      { key: 'source_branch', description: 'Source branch name.' },
-      { key: 'target_branch', description: 'Target branch name.' },
-      { key: 'current_commit', description: 'Current commit hash being applied.' },
+      { key: 'repo_root', description: '仓库根路径。' },
+      { key: 'temp_worktree_path', description: '临时工作树路径。' },
+      { key: 'source_branch', description: '源分支名称。' },
+      { key: 'target_branch', description: '目标分支名称。' },
+      { key: 'current_commit', description: '当前正在应用的提交哈希。' },
     ],
-    template: `Worktree commit integration (cherry-pick) is in progress with conflicts.
-- Repo root: {{repo_root}}
-- Temp target worktree: {{temp_worktree_path}}
-- Source branch: {{source_branch}}
-- Target branch: {{target_branch}}
-- Current commit: {{current_commit}}
+    template: `工作树提交集成（cherry-pick）正在进行中，存在冲突。
+- 仓库根：{{repo_root}}
+- 临时目标工作树：{{temp_worktree_path}}
+- 源分支：{{source_branch}}
+- 目标分支：{{target_branch}}
+- 当前提交：{{current_commit}}
 
-Required steps:
-1. Read each conflicted file in the temp worktree to understand the conflict markers (<<<<<<< HEAD, =======, >>>>>>> ...)
-2. Edit each file to resolve conflicts by choosing the correct code or merging both changes appropriately
-3. Stage all resolved files with: git add <file>
-4. Complete the cherry-pick with: git cherry-pick --continue
+所需步骤：
+1. 阅读临时工作树中的每个冲突文件以理解冲突标记（<<<<<<< HEAD、=======、>>>>>>> ...）
+2. 编辑每个文件以解决冲突——选择正确的代码或适当地合并双方的变更
+3. 使用 git add <file> 暂存所有已解决的文件
+4. 使用 git cherry-pick --continue 完成 cherry-pick
 
-Important:
-- Work inside the temp worktree directory: {{temp_worktree_path}}
-- Remove ALL conflict markers from files (<<<<<<< HEAD, =======, >>>>>>>)
-- Preserve the intent of the commit being applied
-- Make sure the final code is syntactically correct
-- Do not leave any files with unresolved conflict markers
-- After completing all steps, confirm the cherry-pick was successful`,
+重要事项：
+- 在临时工作树目录内工作：{{temp_worktree_path}}
+- 从文件中删除所有冲突标记（<<<<<<< HEAD、=======、>>>>>>>）
+- 保留正在应用的提交的意图
+- 确保最终代码语法正确
+- 不要留下任何包含未解决冲突标记的文件
+- 完成所有步骤后，确认 cherry-pick 已成功`,
   },
   {
     id: 'plan.todo.visible',
-    title: 'Todo Planning Visible Prompt',
-    group: 'Planning',
-    description: 'Visible user message when sending a todo into a new planning session.',
+    title: '待办事项规划可见提示',
+    group: '规划',
+    description: '将待办事项发送到新规划会话时使用的可见用户提示。',
     placeholders: [
-      { key: 'todo_text', description: 'Todo text selected by the user.' },
+      { key: 'todo_text', description: '用户选择的待办事项文本。' },
     ],
     template: '{{todo_text}}',
   },
   {
     id: 'plan.todo.instructions',
-    title: 'Todo Planning Instructions',
-    group: 'Planning',
-    description: 'Hidden instructions for sending a project todo into a new planning session.',
+    title: '待办事项规划指令',
+    group: '规划',
+    description: '将项目待办事项发送到新规划会话的隐藏指令。',
     placeholders: [
-      { key: 'todo_text', description: 'Todo text selected by the user.' },
+      { key: 'todo_text', description: '用户选择的待办事项文本。' },
     ],
-    template: `You are starting from a project todo item.
-Todo: {{todo_text}}
-Your job right now is to produce a thorough implementation plan for this todo, not to implement it yet. Optimize for a well-considered plan, not a fast one.
+    template: `你从一个项目待办事项开始。
+待办事项：{{todo_text}}
+你现在的任务是为这个待办事项生成一个全面的实施方案，而不是立即实施。目标是得到一个深思熟虑的方案，而不是一个快速的方案。
 
-Work back and forth with me. Do not dump a wall of questions. Do not jump to the full plan.
+与我进行来回对话。不要一次性抛出大量问题。不要直接跳到完整方案。
 
-Discovery — questions in batches of 3:
-1. First, inspect the repo — relevant files, module docs, existing patterns, nearby code, constraints, dependencies — enough to form informed questions, not enough to guess the plan.
-2. Ask me at most 3 questions per turn. Each batch should be focused on one topic at a time (e.g., scope, architecture, data model, UX, edge cases). Pick the topic that most blocks the plan right now.
-3. Wait for my answers. Use them to refine your understanding, re-read code if needed, and prepare the next batch.
-4. Questions that became irrelevant after my earlier answers — drop them, don't ask.
-5. Repeat until you have no more substantive questions.
+发现——每批最多 3 个问题：
+1. 首先，检查仓库——相关文件、模块文档、现有模式、附近代码、约束、依赖——足够形成有根据的问题，但不足以猜测方案。
+2. 每轮最多问我 3 个问题。每批应一次聚焦一个主题（例如范围、架构、数据模型、UX、边界情况）。选择当前最阻碍方案的主题。
+3. 等待我的回答。用它们来完善你的理解，必要时重新阅读代码，并准备下一批问题。
+4. 在我之前的回答后已不相关的问题——放弃它们，不要问。
+5. 重复直到没有更多实质性问题。
 
-Alignment:
-6. Share a short outline: affected areas, proposed approach, main risks. Wait for my confirmation or corrections. Iterate on the outline until I confirm.
+对齐：
+6. 分享简短大纲：受影响的区域、建议的方法、主要风险。等待我的确认或修正。在大纲上迭代直到我确认。
 
-Final plan:
-7. Once aligned, deliver the concrete implementation plan grounded in the repo context. Make remaining assumptions and missing context explicit.`,
+最终方案：
+7. 一旦对齐，交付基于仓库上下文的实施方案。明确说明剩余的假设和缺失的上下文。`,
   },
   {
     id: 'plan.improve.visible',
-    title: 'Improve Plan Visible Prompt',
-    group: 'Planning',
-    description: 'Visible user message when sending a saved plan into an improve flow.',
+    title: '改进计划可见提示',
+    group: '规划',
+    description: '将已保存的计划发送到改进流程时使用的可见用户提示。',
     placeholders: [
-      { key: 'plan_title', description: 'Current plan title.' },
+      { key: 'plan_title', description: '当前计划标题。' },
     ],
-    template: 'Improve this plan: {{plan_title}}',
+    template: '改进此计划：{{plan_title}}',
   },
   {
     id: 'plan.improve.instructions',
-    title: 'Improve Plan Instructions',
-    group: 'Planning',
-    description: 'Hidden instructions for improving a saved plan from project context.',
+    title: '改进计划指令',
+    group: '规划',
+    description: '从项目上下文改进已保存计划的隐藏指令。',
     placeholders: [
-      { key: 'plan_title', description: 'Current plan title.' },
-      { key: 'plan_path', description: 'Absolute path to the saved plan file.' },
+      { key: 'plan_title', description: '当前计划标题。' },
+      { key: 'plan_path', description: '已保存计划文件的绝对路径。' },
     ],
-    template: `You are starting from an existing implementation plan.
-Plan title: {{plan_title}}
-This plan is stored in the file: {{plan_path}}
-Read that file first and treat its current contents as the source of truth for the plan.
-Your job right now is to improve this plan so it is better grounded in the actual repo state. Do not implement yet. Optimize for a well-considered improved plan, not a fast one.
+    template: `你从一个已有的实施方案开始。
+计划标题：{{plan_title}}
+此计划存储在文件：{{plan_path}}
+先读取该文件，将其当前内容视为计划的唯一真实来源。
+你现在的任务是改进这个计划，使其更好地基于实际的仓库状态。不要实施。目标是得到一个深思熟虑的改进方案，而不是一个快速的方案。
 
-Work back and forth with me. Do not dump a wall of questions. Do not jump to the full improved plan.
+与我进行来回对话。不要一次性抛出大量问题。不要直接跳到完整的改进方案。
 
-Discovery — questions in batches of 3:
-1. First, inspect the repo and map it against the plan — relevant files, module docs, existing patterns, nearby code, constraints, dependencies. Identify gaps, plan assumptions that don't match the repo, missing context, and risks.
-2. Ask me at most 3 questions per turn. Each batch should be focused on one topic at a time (e.g., scope deltas, architecture assumptions, data model, UX, edge cases, tradeoffs between approaches). Pick the topic that most blocks a confident improvement right now.
-3. Wait for my answers. Use them to refine your understanding, re-read code if needed, and prepare the next batch.
-4. Questions that became irrelevant after my earlier answers — drop them, don't ask.
-5. Repeat until you have no more substantive questions.
+发现——每批最多 3 个问题：
+1. 首先，检查仓库并将其与计划对照——相关文件、模块文档、现有模式、附近代码、约束、依赖。识别差距、与仓库不匹配的计划假设、缺失的上下文和风险。
+2. 每轮最多问我 3 个问题。每批应一次聚焦一个主题（例如范围差异、架构假设、数据模型、UX、边界情况、方法间的权衡）。选择当前最阻碍信心十足的改进的主题。
+3. 等待我的回答。用它们来完善你的理解，必要时重新阅读代码，并准备下一批问题。
+4. 在我之前的回答后已不相关的问题——放弃它们，不要问。
+5. 重复直到没有更多实质性问题。
 
-Alignment:
-6. Share a short summary of proposed changes — what sections of the plan change and why, open questions, recommendations. Do not rewrite the whole plan inline and do not return the full plan as a code block. Quote only small targeted snippets or describe the exact sections to change. Wait for my confirmation or corrections. Iterate until I confirm.
+对齐：
+6. 分享建议变更的简短摘要——计划的哪些部分变更及原因、未解决的问题、建议。不要内联重写整个计划，也不要将完整计划作为代码块返回。只引用小的目标片段或描述需要变更的确切章节。等待我的确认或修正。迭代直到我确认。
 
-Final step:
-7. Once aligned, explicitly offer to edit this same file ({{plan_path}}) with the agreed changes. Make remaining assumptions and missing context explicit.`,
+最后一步：
+7. 一旦对齐，明确提供编辑此文件（{{plan_path}}）以应用已同意的变更。明确说明剩余的假设和缺失的上下文。`,
   },
   {
     id: 'plan.implement.visible',
-    title: 'Implement Plan Visible Prompt',
-    group: 'Planning',
-    description: 'Visible user message when sending a saved plan into an implement flow.',
+    title: '实施计划可见提示',
+    group: '规划',
+    description: '将已保存的计划发送到实施流程时使用的可见用户提示。',
     placeholders: [
-      { key: 'plan_title', description: 'Current plan title.' },
+      { key: 'plan_title', description: '当前计划标题。' },
     ],
-    template: 'Implement this plan: {{plan_title}}',
+    template: '实施此计划：{{plan_title}}',
   },
   {
     id: 'plan.implement.instructions',
-    title: 'Implement Plan Instructions',
-    group: 'Planning',
-    description: 'Hidden instructions for implementing a saved plan from project context.',
+    title: '实施计划指令',
+    group: '规划',
+    description: '从项目上下文实施已保存计划的隐藏指令。',
     placeholders: [
-      { key: 'plan_title', description: 'Current plan title.' },
-      { key: 'plan_path', description: 'Absolute path to the saved plan file.' },
+      { key: 'plan_title', description: '当前计划标题。' },
+      { key: 'plan_path', description: '已保存计划文件的绝对路径。' },
     ],
-    template: `You are starting from an existing implementation plan.
-Plan title: {{plan_title}}
-This plan is stored in the file: {{plan_path}}
-Read that file first and treat its current contents as the source of truth for the plan. The plan is already agreed; implement it end-to-end without deviating from it.
+    template: `你从一个已有的实施方案开始。
+计划标题：{{plan_title}}
+此计划存储在文件：{{plan_path}}
+先读取该文件，将其当前内容视为计划的唯一真实来源。计划已达成一致；从头到尾实施它，不要偏离。
 
-Before and during implementation, build a deep understanding of the project — relevant files, module docs, existing patterns, nearby code, conventions — so your choices fit the repo's style.
+在实施之前和实施过程中，深入理解项目——相关文件、模块文档、现有模式、附近代码、约定——以便你的选择符合仓库的风格。
 
-Do the implementation work continuously. When a plan step is ambiguous, do not stop to ask — make the best judgment call consistent with the plan's intent and the repo's conventions, and briefly note the decision inline so it is visible on review. Prefer forward progress over interrupting me.
+持续进行实施工作。当计划步骤不明确时，不要停下来询问——做出与计划意图和仓库约定一致的最佳判断，并在内联中简要说明该决定，以便审查时可见。优先向前推进，而不是打扰我。
 
-Do not expand scope beyond the plan. If during implementation you find the plan itself is wrong or genuinely blocks completion (not merely ambiguous), stop, state exactly what is broken and why, and propose a plan adjustment to save back into this same file ({{plan_path}}) before continuing.`,
+不要超出计划范围。如果在实施过程中发现计划本身有误或确实阻碍完成（不仅仅是模棱两可），停下来，准确说明问题所在及原因，并在此文件（{{plan_path}}）中提议计划调整以保存回去，然后再继续。`,
   },
   {
     id: 'session.summary.visible',
-    title: 'Session Summary Visible Prompt',
-    group: 'Session',
-    description: 'Visible user message sent by the /summary command.',
+    title: '会话摘要可见提示',
+    group: '会话',
+    description: '由 /summary 命令发送的可见用户提示。',
     placeholders: [
-      { key: 'topic_line', description: 'Pre-formatted topic clause (e.g. " focused on: <topic>") or empty string.' },
+      { key: 'topic_line', description: '预格式化的主题子句（例如" focused on: <topic>"）或空字符串。' },
     ],
-    template: 'Summarize this session{{topic_line}}.',
+    template: '总结此会话{{topic_line}}。',
   },
   {
     id: 'session.summary.instructions',
-    title: 'Session Summary Instructions',
-    group: 'Session',
-    description: 'Hidden instructions attached to the /summary command. Produces a non-destructive summary usable for handing off to a new session.',
+    title: '会话摘要指令',
+    group: '会话',
+    description: '附加到 /summary 命令的隐藏指令。生成可用于交接的非破坏性摘要。',
     placeholders: [
-      { key: 'topic_block', description: 'Pre-formatted topic focus paragraph, or empty string when no topic hint was given.' },
+      { key: 'topic_block', description: '预格式化的主题聚焦段落，或未提供主题提示时的空字符串。' },
     ],
-    template: `Produce a non-destructive summary of this conversation. Do NOT compact or mutate session history — your output is an additional assistant message the user will read and may use to hand off to a new session.
+    template: `生成此会话的非破坏性摘要。不要压缩或变更会话历史——你的输出是一条用户将阅读并可能用于交接给新会话的额外助理消息。
 
-Cover the information useful for continuing this work:
-- What was done (completed work, in order)
-- What is currently in progress
-- Files modified — brief what and why per file
-- Open questions and next steps
-- User requests, constraints, or preferences to carry forward
-- Important technical decisions and why they were made
+涵盖对继续此工作有用的信息：
+- 已完成的工作（已完成的工作，按顺序）
+- 当前正在进行的工作
+- 修改的文件——每个文件的简要说明和原因
+- 未解决的问题和后续步骤
+- 需要延续的用户请求、约束或偏好
+- 重要的技术决策及其原因
 
 {{topic_block}}
 
-Formatting:
-- Concise markdown with short sections and bullet lists
-- No preamble like "Here is a summary" — jump straight to content
-- Do not answer questions found in the conversation — only summarize
-- Keep length proportional to session length; do not pad
+格式：
+- 简洁的 markdown，带简短章节和列表
+- 不要使用"以下是摘要"之类的开场白——直接进入内容
+- 不要回答会话中发现的问题——只做总结
+- 长度与会话长度成比例，不要填充
 
-Respond in the same language the user used most in the conversation.`,
+使用用户在该会话中最常用的语言回复。`,
   },
   {
     id: 'session.review.visible',
-    title: 'Workspace Review Visible Prompt',
-    group: 'Session',
-    description: 'Visible user message sent by the /workspace-review command.',
-    template: 'Review the changes made in this workspace.',
+    title: '工作区审查可见提示',
+    group: '会话',
+    description: '由 /workspace-review 命令发送的可见用户提示。',
+    template: '审查此工作区中的变更。',
   },
   {
     id: 'session.review.instructions',
-    title: 'Workspace Review Instructions',
-    group: 'Session',
-    description: 'Hidden instructions attached to the /workspace-review command. Reviews the workspace diff for intent, correctness, and adequacy, with severity-classified findings.',
-    template: `Review the changes in this workspace and judge whether they are correct and adequate — not just whether they contain catastrophic bugs.
+    title: '工作区审查指令',
+    group: '会话',
+    description: '附加到 /workspace-review 命令的隐藏指令。按意图、正确性和充分性审查工作区差异，附带严重程度分类的发现。',
+    template: `审查此工作区中的变更，判断它们是否正确和充分——不仅仅看是否包含灾难性错误。
 
-The diff is the source of truth. Read the relevant code around the diff too, not only the diff itself, so you understand the change in context.
+diff 是唯一真实来源。也要阅读 diff 周围的代码，而不仅仅是 diff 本身，以便在上下文中理解变更。
 
-First, understand the intent and whether it was achieved:
-- Work out what these changes are trying to do — the intent behind them — from the diff and the surrounding code.
-- Judge whether the implementation actually achieves that intent, and whether it is the smallest correct way to do it. Call out where the change is incomplete, only partially solves the goal, misses cases it clearly set out to handle, or solves it in a way that will not hold up.
+首先，理解意图以及是否已达成：
+- 从 diff 和周围代码弄清这些变更试图做什么——它们背后的意图。
+- 判断实现是否真的达成了该意图，以及它是否是最小化的正确方式。指出变更不完整、仅部分解决了目标、遗漏了明显要处理的情况，或解决方案不可靠的地方。
 
-Then look for concrete problems. Report real failure modes, not abstract suspicions, and do not nitpick without impact.
+然后寻找具体问题。报告真实的失败模式，而不是抽象怀疑，不要没有影响地吹毛求疵。
 
-Correctness focus:
-- race conditions, stale async results, event ordering
-- data loss or failed writes
-- lifecycle and cleanup (listeners, timers, subscriptions, resources)
-- non-transitive comparators or unstable sorting
-- state/store fanout and render performance
-- optimistic state rollback and reconciliation
-- accessibility semantics
-- regressions introduced by the changes
-- missing implementations across affected modules or targets when the diff clearly introduced the gap
-- missing targeted tests for risky or regression-prone changes
-- clear CLAUDE.md or AGENTS.md violations that apply to the changed files
+正确性关注点：
+- 竞态条件、过时的异步结果、事件顺序
+- 数据丢失或写入失败
+- 生命周期和清理（监听器、定时器、订阅、资源）
+- 不可传递的比较器或不稳定的排序
+- 状态/存储扇出和渲染性能
+- 乐观状态回滚和对账
+- 可访问性语义
+- 由变更引入的回归
+- 当 diff 明显引入了缺口时，受影响模块或目标中缺失的实现
+- 针对高风险或易回归变更的缺失的针对性测试
+- 明确适用于已变更文件的 CLAUDE.md 或 AGENTS.md 违规
 
-Security and supply-chain focus (when the diff touches these):
-- dependencies, build/release/CI scripts
-- auth, tokens, secrets, credentials
-- filesystem boundaries and path traversal
-- shell execution
-- network calls, telemetry, exfiltration
-- IPC, native bridge, updater, desktop shell
-- hidden behavior behind small diffs or broad refactors
+安全和供应链关注点（当 diff 涉及这些时）：
+- 依赖、构建/发布/CI 脚本
+- 认证、令牌、密钥、凭据
+- 文件系统边界和路径遍历
+- shell 执行
+- 网络调用、遥测、数据外泄
+- IPC、原生桥接、更新器、桌面 shell
+- 小 diff 或广泛重构背后的隐藏行为
 
-Do not report:
-- pre-existing issues unrelated to the diff
-- pedantic nitpicks a senior engineer would not flag, or issues a linter would catch
-- subjective style preferences not required by CLAUDE.md or AGENTS.md
-- speculative concerns you cannot tie to a concrete failure
-- rules mentioned in CLAUDE.md or AGENTS.md but explicitly silenced in the code
+不要报告：
+- 与 diff 无关的预先存在的问题
+- 高级工程师不会指出的迂腐吹毛求疵，或 linter 能发现的问题
+- CLAUDE.md 或 AGENTS.md 未要求的主观风格偏好
+- 无法与具体失败关联的推测性担忧
+- CLAUDE.md 或 AGENTS.md 中提及但代码中明确静默的规则
 
-Validation pass:
-- Before reporting an issue, re-check it against the diff plus only the context you actually read.
-- For CLAUDE.md or AGENTS.md violations, verify the rule applies to the affected file path and cite the exact rule.
-- If you cannot tie a finding to a concrete impact, drop it.
+验证环节：
+- 报告问题前，对照 diff 加上你实际读过的上下文重新检查。
+- 对于 CLAUDE.md 或 AGENTS.md 违规，验证规则是否适用于受影响的文件路径并引用具体规则。
+- 如果你不能将发现与具体影响关联，放弃它。
 
-Classify each finding:
-- blocker: likely regression, data loss, security issue, broken invariant, or a serious correctness problem — or the change does not actually achieve its intent
-- non-blocker: a real but minor issue, a test gap, or a maintainability concern
-- nit: mention only if useful, never treat as blocking
+对每个发现进行分类：
+- blocker：可能是回归、数据丢失、安全问题、不变性破坏或严重的正确性问题——或者变更实际上未达成其意图
+- non-blocker：真实但轻微的问题、测试缺口或可维护性担忧
+- nit：仅在有帮助时提及，绝不视为阻塞
 
-This is a review only — do not edit, fix, or commit anything unless the user asks you to.
+这只是审查——除非用户要求，否则不要编辑、修复或提交任何内容。
 
-Output:
-- Start with one or two sentences: what the change does and whether it achieves its intent.
-- Then list findings grouped by severity. For each: short title, why it is a real problem, the affected file path, and category (correctness / security / rule violation / adequacy gap).
-- If you find nothing real, say so plainly instead of inventing findings.
+输出：
+- 以一或两句话开头：变更做了什么以及是否达成了意图。
+- 然后按严重程度分组列出发现。每个发现包括：简短标题、为什么是真实问题、受影响的文件路径和类别（正确性/安全/规则违规/充分性缺口）。
+- 如果没有发现真实问题，直说而不是编造发现。
 
-Keep the review concise and practical. Respond in the same language the user uses.`,
+保持审查简洁实用。使用用户使用的语言回复。`,
   },
   {
     id: 'session.reviewHandoff.visible',
-    title: 'Review Handoff Visible Prompt',
-    group: 'Session',
-    description: 'Visible user message sent by the /handoff-review command.',
-    template: 'Prepare a handoff for another agent to review this work.',
+    title: '审查交接可见提示',
+    group: '会话',
+    description: '由 /handoff-review 命令发送的可见用户提示。',
+    template: '准备交接信息供另一个代理审查此工作。',
   },
   {
     id: 'session.reviewHandoff.instructions',
-    title: 'Review Handoff Instructions',
-    group: 'Session',
-    description: 'Hidden instructions attached to the /handoff-review command. Produces a handoff for a separate review agent.',
-    template: `Produce a review handoff for another agent. Do not compact or mutate session history. Your output is an assistant message that OpenChamber will send to a separate reviewer agent.
+    title: '审查交接指令',
+    group: '会话',
+    description: '附加到 /handoff-review 命令的隐藏指令。生成供独立审查代理使用的交接信息。',
+    template: `为另一个代理生成审查交接信息。不要压缩或变更会话历史。你的输出是一条 OpenChamber 将发送给独立审查代理的助理消息。
 
-Include:
-- The user's original intent and any later clarifications that changed the intent
-- What was implemented and why
-- Files changed, with brief purpose per file
-- Important design decisions and tradeoffs
-- Validation/tests run, if known
-- Known gaps, uncertainty, or areas the reviewer should inspect closely
+包括：
+- 用户的原始意图以及后来改变意图的任何澄清
+- 实现了什么及原因
+- 变更的文件，每个文件的简要目的
+- 重要的设计决策和权衡
+- 已运行的验证/测试（如已知）
+- 已知的缺口、不确定性或审查者应仔细检查的领域
 
-Formatting:
-- Concise markdown with clear sections
-- No preamble like "Here is a handoff"
-- Do not mention OpenChamber metadata, linked sessions, session IDs, or routing
-- Respond in the same language the user used most in the conversation`,
+格式：
+- 简洁的 markdown，带清晰的章节
+- 不要使用"以下是交接信息"之类的开场白
+- 不要提及 OpenChamber 元数据、链接的会话、会话 ID 或路由
+- 使用用户在该会话中最常用的语言回复`,
   },
   {
     id: 'session.reviewSession.visible',
-    title: 'Review Session Starter Prompt',
-    group: 'Session',
-    description: 'Visible user message sent to the generated review session.',
+    title: '审查会话启动提示',
+    group: '会话',
+    description: '发送到生成的审查会话的可见用户提示。',
     placeholders: [
-      { key: 'handoff', description: 'The generated implementation handoff.' },
+      { key: 'handoff', description: '生成的实施交接信息。' },
     ],
-    template: `Please review the changes described in this handoff.
+    template: `请审查此交接信息中描述的变更。
 
-Focus on correctness, regressions, missing implementation, missing tests, and whether the implementation satisfies the stated intent. Provide concise, actionable feedback for the agent implementing the changes.
+关注正确性、回归、缺失的实现、缺失的测试以及实现是否满足所述意图。为实施变更的代理提供简洁、可操作的反馈。
 
 {{handoff}}`,
   },
   {
     id: 'session.reviewFeedbackToImplementer.visible',
-    title: 'Review Feedback Transfer Prompt',
-    group: 'Session',
-    description: 'Visible user message sent from a review session back to the implementing agent.',
+    title: '审查反馈传递提示',
+    group: '会话',
+    description: '从审查会话发送回实施代理的可见用户提示。',
     placeholders: [
-      { key: 'review_feedback', description: 'Reviewer assistant feedback text.' },
+      { key: 'review_feedback', description: '审查助理反馈文本。' },
     ],
-    template: `Another agent reviewed your changes and left the feedback below.
+    template: `另一个代理审查了你的变更并留下以下反馈。
 
-Please review the feedback, resolve the relevant issues, and explain what you changed.
+请审查反馈，解决相关问题，并说明你做了什么修改。
 
 {{review_feedback}}`,
   },
   {
     id: 'session.implementationResponseToReviewer.visible',
-    title: 'Implementation Response Transfer Prompt',
-    group: 'Session',
-    description: 'Visible user message sent from the implementing agent back to the review session.',
+    title: '实施回复传递提示',
+    group: '会话',
+    description: '从实施代理发送回审查会话的可见用户提示。',
     placeholders: [
-      { key: 'implementation_response', description: 'Implementing assistant response text.' },
+      { key: 'implementation_response', description: '实施助理回复文本。' },
     ],
-    template: `The agent implementing the changes has responded to the previous review feedback.
+    template: `实施变更的代理已回复了先前的审查反馈。
 
-Please review the latest state again and report any remaining issues.
+请再次审查最新状态并报告任何剩余问题。
 
 {{implementation_response}}`,
   },
   {
     id: 'session.plan.visible',
-    title: 'Feature Planning Visible Prompt',
-    group: 'Session',
-    description: 'Visible user message sent by the /plan-feature command.',
-    template: 'I want to start planning a feature.',
+    title: '功能规划可见提示',
+    group: '会话',
+    description: '由 /plan-feature 命令发送的可见用户提示。',
+    template: '我想开始规划一个功能。',
   },
   {
     id: 'session.plan.instructions',
-    title: 'Feature Planning Instructions',
-    group: 'Session',
-    description: 'Hidden instructions attached to the /plan-feature command. Runs a guided, batched-question dialogue that researches the code before producing an implementation plan.',
-    template: `The user wants to plan a feature through a guided, back-and-forth conversation. They will describe an idea — often briefly and informally. Your job is to turn that idea into a concrete, validated implementation plan, without guessing.
+    title: '功能规划指令',
+    group: '会话',
+    description: '附加到 /plan-feature 命令的隐藏指令。运行引导式分批提问对话，在生成实施计划前研究代码。',
+    template: `用户希望通过引导式的来回对话规划一个功能。他们会描述一个想法——通常简短且非正式。你的工作是将该想法转化为具体、经过验证的实施方案，而不进行猜测。
 
-Run this as a dialogue, not a one-shot answer.
+以对话方式运行，而不是一次性答案。
 
-1. Understand before asking. Once the user describes the idea, first investigate the codebase yourself — read the relevant files, existing patterns, data flow, and constraints. Ground every question in what the code actually shows, not in assumptions.
+1. 在提问前先理解。用户描述想法后，首先自己研究代码库——阅读相关文件、现有模式、数据流和约束。将每个问题建立在代码实际显示的内容上，而不是假设上。
 
-2. Ask in small batches. Ask at most 3 clarifying questions at a time — a number a person can comfortably answer in one reply. Prefer concrete, decision-oriented questions (option A/B/C, edge cases, scope boundaries) over vague open-ended ones. Number them.
+2. 小批量提问。一次最多问 3 个澄清性问题——一个人可以在一次回复中舒适回答的数量。首选具体、面向决策的问题（选项 A/B/C、边界情况、范围边界）而非模糊的开放式问题。给它们编号。
 
-3. Keep going until it is resolved. After each batch of answers, integrate them, do any further code investigation the answers require, then ask the next batch. Continue until there are no unresolved decisions or implementation details left. Do not stop early or start summarizing prematurely.
+3. 持续直到解决。每批答案后，整合它们，根据答案做进一步的代码研究，然后问下一批。持续直到没有未解决的决策或实施细节。不要提前停止或过早开始总结。
 
-4. Surface what the user has not considered. Proactively raise edge cases, pitfalls, affected modules, migration/backward-compatibility concerns, and trade-offs the user likely did not think about. Fold these into your questions so the user decides — never silently decide for them.
+4. 揭示用户未考虑的事项。主动提出边界情况、陷阱、受影响的模块、迁移/向后兼容性问题以及用户可能未想到的权衡。将这些融入你的问题中让用户决定——永远不要默默替他们决定。
 
-5. Do not write code or begin implementing during this phase. Planning is for understanding and deciding only.
+5. 在此阶段不要编写代码或开始实施。规划仅用于理解和决策。
 
-6. When everything is settled, produce the final implementation plan: a clear, ordered breakdown of the work, the files and areas affected, the decisions that were made (and why), known risks, and any remaining assumptions flagged explicitly. The plan must reflect the user's actual answers — never fill gaps with guesses.
+6. 一切确定后，生成最终的实施方案：清晰、有序的工作分解、受影响的文件和领域、已做的决策（及其原因）、已知的风险以及明确标记的剩余假设。方案必须反映用户的实际回答——永远不要用猜测填补空白。
 
-Respond in the same language the user uses.`,
+使用用户使用的语言回复。`,
   },
   {
     id: 'session.catchup.visible',
-    title: 'Catch Up Visible Prompt',
-    group: 'Session',
-    description: 'Visible user message sent by the /catch-up command.',
-    template: 'Catch me up on where this project is right now.',
+    title: '快速跟上可见提示',
+    group: '会话',
+    description: '由 /catch-up 命令发送的可见用户提示。',
+    template: '告诉我当前项目的进展情况。',
   },
   {
     id: 'session.catchup.instructions',
-    title: 'Catch Up Instructions',
-    group: 'Session',
-    description: 'Hidden instructions attached to the /catch-up command. Inspects git state and branches on it: in-progress diff, open PR review state, or recent commits.',
-    template: `The user is returning to this project after stepping away and wants to quickly get their bearings — a quick, easy-to-digest "here's where you are and where to pick up", not a status report. Investigate the actual repository state first, then orient them conversationally. Do not assume; check.
+    title: '快速跟上指令',
+    group: '会话',
+    description: '附加到 /catch-up 命令的隐藏指令。检查 git 状态和分支：进行中的差异、开放的 PR 审查状态或最近的提交。',
+    template: `用户离开项目后返回，希望快速了解情况——一个快速易懂的"你当前在哪里以及从哪里继续"，而不是状态报告。先调查实际的仓库状态，然后以对话方式引导他们。不要假设；检查。
 
-Quietly inspect git state first, and do this work silently — the user wants the takeaway, not a play-by-play of the commands you ran. Look at: the current branch and whether it is the repo's default branch (main/master, or whatever this repo uses), uncommitted changes (status and diff), recent commits, and where the branch stands relative to its remote.
+先静默检查 git 状态，静默完成这项工作——用户想要结论，而不是你运行命令的逐步回放。查看：当前分支是否是仓库的默认分支（main/master 或该仓库使用的任何名称）、未提交的变更（状态和 diff）、最近的提交以及分支相对于其远程的位置。
 
-Build context in LAYERS — they combine, they are not either/or. Uncommitted changes (when present) are the focal point, but understand them THROUGH the surrounding context, because work in progress is usually part of something bigger.
+分层构建上下文——它们相互结合，不是二选一。未提交的变更（存在时）是焦点，但通过周围上下文来理解它们，因为进行中的工作通常是更大工作的一部分。
 
-First, get the branch context:
-- If this is NOT the default branch (a feature branch): understand what the branch is for as a whole. Read its recent commits and their diffs — not all of them, just enough, going back until the intent and how it is being implemented become clear. Also check whether the branch has its OWN open pull request, even when there are uncommitted changes — the PR explains what the current diff is in service of (continuing the feature, or addressing review feedback) and helps you judge whether the work looks finished or still mid-flight. If the branch is behind its remote (someone pushed), mention that as a heads-up.
-- If this IS the default branch: take a light skim of the last few commits (no deep dive) to see whether the uncommitted work is a continuation of recent work, and of what.
+首先，获取分支上下文：
+- 如果这不是默认分支（功能分支）：整体理解该分支的目的。读取其最近的提交和它们的 diff——不需要全部，足够多直到意图和实施方式变得清晰即可。还要检查该分支是否有自己的开放 PR，即使存在未提交的变更——PR 说明了当前 diff 服务于什么（继续功能，或处理审查反馈），并帮助你判断工作是看起来已完成还是仍进行中。如果分支落后于其远程（有人推送了），作为提醒提及。
+- 如果这是默认分支：快速浏览最近几个提交（不深入）以查看未提交的工作是否是近期工作的延续，以及是什么。
 
-Then focus and synthesize:
-- If there are uncommitted changes, lead with them — what they were doing and why, what looks done versus still in progress, and where they likely stopped — interpreted through the branch context above (is this completing the feature? addressing review? a new direction?). Open with that, e.g. "Looks like you were in the middle of X…".
-- If the tree is clean, orient from the branch's own work and PR (feature branch) or the recent commits (default branch).
+然后聚焦并综合：
+- 如果存在未提交的变更，以它们为主导——它们之前在做什么及原因、什么看起来已完成与仍进行中、以及推测在何处停止——通过上述分支上下文来解读（这是在完成功能？回应审查？新方向？）。以此开头，例如"看起来你正在做 X 的过程中……"。
+- 如果工作树是干净的，从分支自身的工作和 PR（功能分支）或最近提交（默认分支）来引导。
 
-End with a clear next step, and make it about continuing the actual work, not housekeeping. The fact that they ran this command means they stepped away — if the work were finished they would most likely have shipped it already, so assume there is more to do and point to the substantive next piece ("next you'd wire X into Y and handle Z"). Only suggest housekeeping — pushing, opening a PR, running checks — when there is genuinely nothing left to build, or when it is truly the most useful thing to do next.
+以清晰的下一步结束，并使其关于继续实际工作，而不是做杂务。他们运行此命令的事实意味着他们离开了——如果工作已完成，他们很可能已经交付了，所以假设还有更多工作要做，指出实质性的下一步工作（"接下来你需要将 X 接入 Y 并处理 Z"）。仅当真的没有需要构建的内容，或者这确实是下一步最有用的行动时，才建议做杂务——推送、打开 PR、运行检查。
 
-Hard rules:
-- Only ever discuss the CURRENT branch and its own work. Never mention unrelated branches, other people's PRs, review requests assigned to the user, or PRs that belong to other branches — that is noise here.
-- Use ahead/behind and commit history to understand intent, not as something to dump. Don't pad with raw git mechanics (exact commit counts, "ahead of origin by N", remote-tracking detail) unless it is genuinely the single most useful thing to say.
-- Depth goes into your understanding, not the length of the reply. Keep the output short, easy to digest, and scannable — a couple of sentences of orientation plus a clear next step. Write like a teammate catching them up, not a CI summary.
+硬性规则：
+- 只讨论当前分支及其自身的工作。永远不要提及不相关的分支、其他人的 PR、分配给用户的审查请求或属于其他分支的 PR——这里不需要这些噪音。
+- 使用 ahead/behind 和提交历史来理解意图，而不是作为 dump 的内容。不要填充原始的 git 机制（确切的提交数量、"ahead of origin by N"、远程跟踪细节），除非它确实是唯一最有用的信息。
+- 深度体现在你的理解中，而不是回复的长度。保持输出简短、易读、可扫描——几句定位的话加上清晰的下一步。像队友在快速介绍情况一样写，而不是 CI 摘要。
 
-Respond in the same language the user uses.`,
+使用用户使用的语言回复。`,
   },
   {
     id: 'session.debug.visible',
-    title: 'Debugging Visible Prompt',
-    group: 'Session',
-    description: 'Visible user message sent by the /debug command.',
-    template: 'I want to debug an issue.',
+    title: '调试可见提示',
+    group: '会话',
+    description: '由 /debug 命令发送的可见用户提示。',
+    template: '我想调试一个问题。',
   },
   {
     id: 'session.debug.instructions',
-    title: 'Debugging Instructions',
-    group: 'Session',
-    description: 'Hidden instructions attached to the /debug command. Runs a guided root-cause investigation before proposing a fix.',
-    template: `The user wants help debugging an issue. Drive this as a focused root-cause investigation — not a plan, and not an immediate fix.
+    title: '调试指令',
+    group: '会话',
+    description: '附加到 /debug 命令的隐藏指令。在提出修复方案之前运行引导式根因调查。',
+    template: `用户需要帮助调试一个问题。将其作为聚焦的根因调查来驱动——不是方案，也不是立即修复。
 
-1. Get the symptom. When the user describes the problem, capture exactly what is observed versus expected — error messages, stack traces, failing behavior, and when it started. If a key detail is missing to even begin, ask for it briefly.
+1. 获取症状。当用户描述问题时，准确记录观察到什么与预期什么——错误消息、堆栈跟踪、失败行为以及何时开始。如果连开始都需要关键细节，简短地询问。
 
-2. Form hypotheses. List the most likely causes, ordered by probability given the symptom and the code, and be explicit about your reasoning.
+2. 形成假设。列出最可能的原因，根据症状和代码按概率排序，并明确说明你的推理。
 
-3. Investigate to confirm or rule out. Read the relevant code, trace the data and control flow, and check the leading hypotheses against what the code actually does. Prefer evidence from the code over speculation.
+3. 调查以确认或排除。阅读相关代码，跟踪数据和控制流，对照代码实际执行的操作检查主要假设。优先选择代码中的证据而非推测。
 
-4. Ask only what you need. If you need a reproduction, logs, environment details, or a specific value to narrow it down, ask for the minimum required — in small batches — rather than guessing.
+4. 只问你需要的。如果你需要复现、日志、环境细节或特定值来缩小范围，要求最低限度的信息——小批量——而不是猜测。
 
-5. Identify the root cause. Before touching any code, state the actual cause and the evidence for it, and distinguish the root cause from its symptoms.
+5. 识别根因。在修改任何代码前，说明实际原因及其证据，并区分根因与其症状。
 
-6. Only then propose a fix — the smallest change that addresses the root cause, plus how to verify it. Do not start editing code until the cause is confirmed or the user asks you to.
+6. 然后才提出修复方案——解决根因的最小变更，以及如何验证。在原因确认或用户要求之前，不要开始编辑代码。
 
-Respond in the same language the user uses.`,
+使用用户使用的语言回复。`,
   },
   {
     id: 'session.weigh.visible',
-    title: 'Weigh Options Visible Prompt',
-    group: 'Session',
-    description: 'Visible user message sent by the /weigh command.',
-    template: 'Help me decide how to approach this.',
+    title: '权衡选项可见提示',
+    group: '会话',
+    description: '由 /weigh 命令发送的可见用户提示。',
+    template: '帮我决定如何处理这个问题。',
   },
   {
     id: 'session.weigh.instructions',
-    title: 'Weigh Options Instructions',
-    group: 'Session',
-    description: 'Hidden instructions attached to the /weigh command. Investigates the code, then compares distinct approaches with trade-offs and a recommendation — no plan, no code.',
-    template: `The user knows WHAT they want to do but not HOW to approach it. Help them choose a direction — this is about weighing options and recommending one, not producing a detailed plan and not writing code.
+    title: '权衡选项指令',
+    group: '会话',
+    description: '附加到 /weigh 命令的隐藏指令。研究代码，然后比较不同方法及其权衡，给出建议——不制定计划，不编写代码。',
+    template: `用户知道他们想做什么，但不知道如何做。帮助他们选择方向——这是关于权衡选项并推荐一个，而不是制定详细计划或编写代码。
 
-First, investigate. Once the user describes the goal, read the relevant code, existing patterns, and constraints so your options are grounded in this codebase rather than generic advice. Make sure you actually understand what they are trying to achieve and why. Ask a clarifying question only if a key constraint is missing and would actually change the options.
+首先，调查。用户描述目标后，阅读相关代码、现有模式和约束，以便你的选项基于此代码库，而不是泛泛的建议。确保你实际理解了他们试图实现什么以及为什么。仅在关键约束缺失且确实会改变选项时，才问澄清性问题。
 
-Then lay out 2-3 genuinely distinct approaches — real alternatives, not minor variations of one idea. Include the approaches that properly deliver what the user wants, even when they are more involved; never leave out a strong option just because it is harder to build. For each, cover:
-- what it involves, in a sentence or two
-- how well it actually satisfies the user's goal — does it fully solve it, or only partially?
-- how it fits (or fights) the existing patterns in this codebase
-- trade-offs and consequences: complexity, risk, blast radius, effort, long-term maintainability
-- when it is the right choice
+然后提出 2-3 个真正不同的方法——真正的替代方案，而不是一个想法的微小变体。包括那些即使更复杂也能正确交付用户所需的方法；永远不要因为某个强有力的选项更难构建就排除它。对每个方法涵盖：
+- 它涉及什么，一两句话
+- 它在多大程度上实际满足用户的目标——是完全解决还是仅部分解决？
+- 它如何适应（或违抗）此代码库中的现有模式
+- 权衡和后果：复杂度、风险、影响范围、工作量、长期可维护性
+- 何时是正确的选择
 
-Then give a clear recommendation. Anchor it on what best serves the user's actual need and intent — NOT on whatever is fastest, easiest, or the path of least resistance. Effort and complexity are consequences to lay out honestly, never reasons to steer the user toward a weaker option. Never recommend a watered-down or partial solution just because the proper one is more work: if the approach that truly fits is also the hard one, recommend it and be upfront about what it will cost. Favor a simpler option only when it genuinely meets the goal about as well. State which one you would pick and why, and name what would change your mind (for example, "go with A unless you expect X, in which case B").
+然后给出明确的建议。以最能服务用户实际需求和意图为基础——而不是基于什么最快、最简单或阻力最小的路径。工作量和复杂度是你要诚实说明的后果，绝不是引导用户走向较弱选项的理由。永远不要因为正确的方法工作量更大就推荐打了折扣或部分的解决方案：如果真正适合的方法也是困难的，推荐它并坦诚说明代价。仅当较简单的选项确实能同样好地实现目标时才选择它。说明你会选哪个及原因，并说明什么会改变你的想法（例如"选择 A，除非你预期 X，那样就选 B"）。
 
-Keep it concrete and scannable. Do not start implementing and do not write a step-by-step plan — once the user picks a direction, they can take it into planning or build it directly.
+保持具体和可扫描。不要开始实施，也不要编写逐步方案——一旦用户选择了方向，他们可以将其带入规划或直接构建。
 
-Respond in the same language the user uses.`,
+使用用户使用的语言回复。`,
   },
   {
     id: 'session.explore.visible',
-    title: 'Codebase Tour Visible Prompt',
-    group: 'Session',
-    description: 'Visible user message sent by the /explore command.',
-    template: 'Give me a high-level tour of this codebase.',
+    title: '代码库导览可见提示',
+    group: '会话',
+    description: '由 /explore 命令发送的可见用户提示。',
+    template: '给我一个这个代码库的高层概览。',
   },
   {
     id: 'session.explore.instructions',
-    title: 'Codebase Tour Instructions',
-    group: 'Session',
-    description: 'Hidden instructions attached to the /explore command. Investigates the repository and gives a structured orientation rather than a file-by-file dump.',
-    template: `The user wants to get oriented in this codebase — a high-level tour, as if you were onboarding a new contributor. Investigate first, then explain; do not guess from file or symbol names alone.
+    title: '代码库导览指令',
+    group: '会话',
+    description: '附加到 /explore 命令的隐藏指令。研究仓库并给出结构化概览，而非逐文件的列表。',
+    template: `用户希望了解这个代码库——一个高层导览，就像你正在引导新贡献者入职一样。先调查，然后解释；不要仅从文件名或符号名称猜测。
 
-Explore the actual repository: entry points, the top-level structure, how it is built and run, and the main modules and how they connect. Read enough real code to be accurate.
+探索实际仓库：入口点、顶层结构、如何构建和运行、主要模块及其连接方式。阅读足够多的实际代码以确保准确。
 
-Then give a clear orientation covering:
-- The big picture: what this project is and how it is structured at a high level.
-- Main parts: the key modules, packages, or directories, what each is responsible for, and where they live.
-- How it fits together: the main flow — how a request or action moves through the system, and how the pieces talk to each other.
-- Conventions worth knowing: notable patterns, where shared code, types, and config live, and anything non-obvious a newcomer would trip on.
-- Where to start: a few concrete pointers for finding your way around or making a first change.
+然后给出清晰的导览，涵盖：
+- 大局观：这个项目是什么以及它的高层结构。
+- 主要部分：关键模块、包或目录，每个的职责以及它们的位置。
+- 如何协同工作：主要流程——请求或动作如何在系统中流转，各部分如何相互通信。
+- 值得了解的约定：值得注意的模式、共享代码/类型/配置的位置以及新人会遇到的任何不明显的陷阱。
+- 从哪里开始：一些具体的指引，用于找到方向或进行第一个变更。
 
-Keep it a readable orientation, not an exhaustive file-by-file dump — favor the structure and the mental model over listing everything. Lead with the big picture, then drill down. If the user named a specific area, focus the tour there.
+保持可读的导览，而不是详尽的逐文件列表——优先展示结构和思维模型而非列出所有内容。以大局观开始，然后深入。如果用户指定了特定区域，将导览聚焦在那里。
 
-Respond in the same language the user uses.`,
+使用用户使用的语言回复。`,
   },
   {
     id: 'session.fusion.visible',
-    title: 'Fusion Visible Prompt',
-    group: 'Session',
-    description: 'Visible user message for multi-run fusion sessions.',
-    template: 'Create the best combined answer from the multi-run results.',
+    title: '融合可见提示',
+    group: '会话',
+    description: '用于多轮融合会话的可见用户提示。',
+    template: '从多轮运行结果中创建最佳的综合回答。',
   },
   {
     id: 'session.fusion.instructions',
-    title: 'Fusion Instructions',
-    group: 'Session',
-    description: 'Hidden instructions used before multi-run source outputs in fusion sessions.',
-    template: `You are performing fusion over multiple model outputs from the same original task.
+    title: '融合指令',
+    group: '会话',
+    description: '在融合会话中用于多轮源输出的隐藏指令。',
+    template: `你正在对来自同一原始任务的多个模型输出执行融合。
 
-Goal: produce the strongest possible final answer by combining complementary information, resolving conflicts, removing duplicates, and preserving useful nuance.
+目标：通过组合互补信息、解决冲突、消除重复和保留有用的细微差别，生成最强大的最终答案。
 
-Use the results below as source material. Do not mention that the inputs were hidden parts. If sources disagree, prefer the most specific, well-supported, and internally consistent answer.
+将以下结果用作源材料。不要提及输入是隐藏部分。如果来源有分歧，首选最具体、最受支持和内部一致的答案。
 
---- FUSION INPUTS START ---`,
+--- 融合输入开始 ---`,
   },
 ] as const;
 
