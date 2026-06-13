@@ -70,7 +70,7 @@ function getActiveOpencodeConfigDir() {
   if (customConfigPath) {
     return path.dirname(path.resolve(customConfigPath));
   }
-  return path.join(os.homedir(), '.config', 'opencode');
+  return process.env.OPENCODE_CONFIG_DIR || path.join(os.homedir(), '.config', 'opencode');
 }
 
 function getActiveUserConfigPaths() {

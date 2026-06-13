@@ -712,8 +712,8 @@ async function copyDirectoryNoSymlinks(srcDir: string, dstDir: string) {
 }
 
 function getUserSkillBaseDir() {
-  const pluralPath = path.join(os.homedir(), '.config', 'opencode', 'skills');
-  const legacyPath = path.join(os.homedir(), '.config', 'opencode', 'skill');
+  const pluralPath = path.join(process.env.OPENCODE_CONFIG_DIR || path.join(os.homedir(), '.config', 'opencode'), 'skills');
+  const legacyPath = path.join(process.env.OPENCODE_CONFIG_DIR || path.join(os.homedir(), '.config', 'opencode'), 'skill');
   if (fs.existsSync(legacyPath) && !fs.existsSync(pluralPath)) return legacyPath;
   return pluralPath;
 }

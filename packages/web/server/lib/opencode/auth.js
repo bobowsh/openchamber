@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-const OPENCODE_DATA_DIR = path.join(os.homedir(), '.local', 'share', 'opencode');
+const OPENCODE_DATA_DIR = process.env.OPENCODE_DATA_DIR || path.join(os.homedir(), '.local', 'share', 'opencode');
 const AUTH_FILE = path.join(OPENCODE_DATA_DIR, 'auth.json');
 
 function readAuthFile() {

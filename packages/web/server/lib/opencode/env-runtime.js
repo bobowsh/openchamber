@@ -866,9 +866,15 @@ export const createOpenCodeEnvRuntime = (deps) => {
     if (typeof raw !== 'string') {
       return null;
     }
-    const trimmed = normalizeDirectoryPath(raw).trim();
+    let trimmed = normalizeDirectoryPath(raw).trim();
     if (!trimmed) {
       return '';
+    }
+
+    // Resolve ./ prefix relative to the EXE directory (same convention as
+    // main.mjs's exeOrSourceDir in packaged Electron mode)
+    if (trimmed.startsWith('./')) {
+      trimmed = path.resolve(path.dirname(process.execPath), trimmed);
     }
 
     try {

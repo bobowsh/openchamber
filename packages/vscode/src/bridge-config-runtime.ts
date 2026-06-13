@@ -75,7 +75,7 @@ type ConfigRuntimeDeps = {
   clientReloadDelayMs: number;
 };
 
-const AGENTS_MD_PATH = path.join(os.homedir(), '.config', 'opencode', 'AGENTS.md');
+const getAgentsMdPath = () => path.join(process.env.OPENCODE_CONFIG_DIR || path.join(os.homedir(), '.config', 'opencode'), 'AGENTS.md');
 const MAX_BEHAVIOR_PROMPT_SIZE = 1024 * 1024;
 
 const resolveWorkingDirectory = (ctx: BridgeContext | undefined, directory?: string): string | undefined => (
@@ -204,7 +204,7 @@ export async function handleConfigBridgeMessage(
 
     case 'api:behavior/agents-md:get': {
       try {
-        const content = await fs.promises.readFile(AGENTS_MD_PATH, 'utf8');
+        const content = await fs.promises.readFile(getAgentsMdPath(), 'utf8');
         return { id, type, success: true, data: { content, exists: true } };
       } catch (error) {
         if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') {
@@ -220,8 +220,9 @@ export async function handleConfigBridgeMessage(
       if (content.length > MAX_BEHAVIOR_PROMPT_SIZE) {
         return { id, type, success: false, error: `Content exceeds maximum size of ${MAX_BEHAVIOR_PROMPT_SIZE} bytes` };
       }
-      await fs.promises.mkdir(path.dirname(AGENTS_MD_PATH), { recursive: true });
-      await fs.promises.writeFile(AGENTS_MD_PATH, content, 'utf8');
+      const agentsMdPath = getAgentsMdPath();
+      await fs.promises.mkdir(path.dirname(agentsMdPath), { recursive: true });
+      await fs.promises.writeFile(agentsMdPath, content, 'utf8');
       await ctx?.manager?.restart();
       return { id, type, success: true, data: { success: true } };
     }

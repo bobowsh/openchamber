@@ -76,7 +76,7 @@ const inferSkillScopeAndSourceFromLocation = (location: string, workingDirectory
 
   const home = os.homedir();
   const userRoots = [
-    path.join(home, '.config', 'opencode'),
+    process.env.OPENCODE_CONFIG_DIR || path.join(home, '.config', 'opencode'),
     path.join(home, '.opencode'),
     path.join(home, '.claude', 'skills'),
     path.join(home, '.agents', 'skills'),

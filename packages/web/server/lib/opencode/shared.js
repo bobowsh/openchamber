@@ -6,14 +6,26 @@ import { parse as parseJsonc } from 'jsonc-parser';
 
 // ============== PATH CONSTANTS ==============
 
-const OPENCODE_CONFIG_DIR = path.join(os.homedir(), '.config', 'opencode');
-const AGENT_DIR = path.join(OPENCODE_CONFIG_DIR, 'agents');
-const COMMAND_DIR = path.join(OPENCODE_CONFIG_DIR, 'commands');
-const SKILL_DIR = path.join(OPENCODE_CONFIG_DIR, 'skills');
-const CONFIG_FILE = path.join(OPENCODE_CONFIG_DIR, 'config.json');
+let OPENCODE_CONFIG_DIR = process.env.OPENCODE_CONFIG_DIR || path.join(os.homedir(), '.config', 'opencode');
+let AGENT_DIR = path.join(OPENCODE_CONFIG_DIR, 'agents');
+let COMMAND_DIR = path.join(OPENCODE_CONFIG_DIR, 'commands');
+let SKILL_DIR = path.join(OPENCODE_CONFIG_DIR, 'skills');
+let CONFIG_FILE = path.join(OPENCODE_CONFIG_DIR, 'config.json');
 const CUSTOM_CONFIG_FILE = process.env.OPENCODE_CONFIG
   ? path.resolve(process.env.OPENCODE_CONFIG)
   : null;
+
+/**
+ * Update all config directory paths at runtime.
+ * Called when a mimocode binary overrides OPENCODE_CONFIG_DIR.
+ */
+export function setOpenCodeConfigDir(dir) {
+  OPENCODE_CONFIG_DIR = dir;
+  AGENT_DIR = path.join(dir, 'agents');
+  COMMAND_DIR = path.join(dir, 'commands');
+  SKILL_DIR = path.join(dir, 'skills');
+  CONFIG_FILE = path.join(dir, 'config.json');
+}
 const PROMPT_FILE_PATTERN = /^\{file:(.+)\}$/i;
 
 // ============== SCOPE TYPE CONSTANTS ==============

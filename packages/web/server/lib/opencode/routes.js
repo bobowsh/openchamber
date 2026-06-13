@@ -486,17 +486,22 @@ export const registerOpenCodeRoutes = (app, dependencies) => {
   });
 
   // Behavior / Global AGENTS.md endpoints
-  const AGENTS_MD_PATH = path.join(os.homedir(), '.config', 'opencode', 'AGENTS.md');
   const MAX_BEHAVIOR_PROMPT_SIZE = 1024 * 1024; // 1 MB
+  const getAgentsMdPath = () => {
+    const configDir = process.env.OPENCODE_CONFIG_DIR || path.join(os.homedir(), '.config', 'opencode');
+    const resolved = path.join(configDir, 'AGENTS.md');
+    return resolved;
+  };
 
   app.get('/api/behavior/agents-md', async (_req, res) => {
     try {
+      const agentsMdPath = getAgentsMdPath();
       try {
-        await fs.promises.access(AGENTS_MD_PATH);
+        await fs.promises.access(agentsMdPath);
       } catch {
         return res.json({ content: '', exists: false });
       }
-      const content = await fs.promises.readFile(AGENTS_MD_PATH, 'utf8');
+      const content = await fs.promises.readFile(agentsMdPath, 'utf8');
       return res.json({ content, exists: true });
     } catch (error) {
       console.error('Failed to read AGENTS.md:', error);
@@ -513,14 +518,15 @@ export const registerOpenCodeRoutes = (app, dependencies) => {
       }
 
       // Ensure parent directory exists
-      const parentDir = path.dirname(AGENTS_MD_PATH);
+      const agentsMdPath = getAgentsMdPath();
+      const parentDir = path.dirname(agentsMdPath);
       try {
         await fs.promises.access(parentDir);
       } catch {
         await fs.promises.mkdir(parentDir, { recursive: true });
       }
 
-      await fs.promises.writeFile(AGENTS_MD_PATH, content, 'utf8');
+      await fs.promises.writeFile(agentsMdPath, content, 'utf8');
 
       // Refresh OpenCode so it picks up the new AGENTS.md without a full restart
       try {

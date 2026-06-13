@@ -3,9 +3,6 @@ import path from 'path';
 import os from 'os';
 import yaml from 'yaml';
 
-const OPENCODE_CONFIG_DIR = path.join(os.homedir(), '.config', 'opencode');
-const GLOBAL_SNIPPET_DIR = path.join(OPENCODE_CONFIG_DIR, 'snippet');
-const GLOBAL_SNIPPET_DIR_ALT = path.join(OPENCODE_CONFIG_DIR, 'snippets');
 const SNIPPET_EXTENSION = '.md';
 const SNIPPET_NAME_PATTERN = /^[a-z0-9][a-z0-9_-]{0,79}$/i;
 const HASHTAG_PATTERN = /#([a-z0-9_-]+)/gi;
@@ -20,7 +17,11 @@ function getProjectSnippetDirs(workingDirectory) {
 }
 
 function getGlobalSnippetDirs() {
-  return [GLOBAL_SNIPPET_DIR_ALT, GLOBAL_SNIPPET_DIR];
+  const configDir = process.env.OPENCODE_CONFIG_DIR || path.join(os.homedir(), '.config', 'opencode');
+  return [
+    path.join(configDir, 'snippets'),
+    path.join(configDir, 'snippet'),
+  ];
 }
 
 function getLoadDirs(workingDirectory) {
@@ -144,9 +145,10 @@ function getWritableSnippetDir(scope, workingDirectory) {
     const alternate = path.join(workingDirectory, '.opencode', 'snippets');
     return fs.existsSync(alternate) && !fs.existsSync(preferred) ? alternate : preferred;
   }
-  return fs.existsSync(GLOBAL_SNIPPET_DIR_ALT) && !fs.existsSync(GLOBAL_SNIPPET_DIR)
-    ? GLOBAL_SNIPPET_DIR_ALT
-    : GLOBAL_SNIPPET_DIR;
+  const configDir = process.env.OPENCODE_CONFIG_DIR || path.join(os.homedir(), '.config', 'opencode');
+  const singular = path.join(configDir, 'snippet');
+  const plural = path.join(configDir, 'snippets');
+  return fs.existsSync(plural) && !fs.existsSync(singular) ? plural : singular;
 }
 
 function findSnippetByName(name, workingDirectory) {

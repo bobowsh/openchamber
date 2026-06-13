@@ -1,5 +1,7 @@
 import { spawn, spawnSync } from 'node:child_process';
+import path from 'node:path';
 import net from 'node:net';
+import { setOpenCodeConfigDir } from './shared.js';
 
 const parsePositiveInt = (value, fallback) => {
   const parsed = Number.parseInt(String(value ?? ''), 10);
@@ -244,6 +246,18 @@ export const createOpenCodeLifecycleRuntime = (deps) => {
       }
     }
 
+    // If the launched binary is mimocode, align OPENCODE_CONFIG_DIR with MIMOCODE_HOME/config
+    const binaryBasename = path.basename(binary);
+    if (binaryBasename.toLowerCase().includes("mimo") && process.env.MIMOCODE_HOME) {
+      const mimoConfigDir = path.join(process.env.MIMOCODE_HOME, "config");
+      processEnv.OPENCODE_CONFIG_DIR = mimoConfigDir;
+      process.env.OPENCODE_CONFIG_DIR = mimoConfigDir;
+      setOpenCodeConfigDir(mimoConfigDir);
+      console.log(`[OpenCode] MimoCode detected — overrode OPENCODE_CONFIG_DIR to ${mimoConfigDir} (basename=${binaryBasename})`);
+    } else {
+      console.log(`[OpenCode] Skipping OPENCODE_CONFIG_DIR override: basename=${binaryBasename}, hasMimoCodeHome=${!!process.env.MIMOCODE_HOME}, MIMOCODE_HOME=${process.env.MIMOCODE_HOME || '(not set)'}`);
+    }
+
     const pathValue = typeof processEnv?.PATH === 'string' ? processEnv.PATH : '';
     const pathEntryCount = pathValue ? pathValue.split(process.platform === 'win32' ? ';' : ':').filter(Boolean).length : 0;
     state.lastOpenCodeLaunchDiagnostics = {
@@ -468,6 +482,8 @@ export const createOpenCodeLifecycleRuntime = (deps) => {
           ...process.env,
           PATH: envPath,
           OPENCODE_SERVER_PASSWORD: openCodePassword,
+          OPENCODE_CONFIG_DIR: process.env.OPENCODE_CONFIG_DIR,
+          OPENCODE_DATA_DIR: process.env.OPENCODE_DATA_DIR,
         },
       });
 

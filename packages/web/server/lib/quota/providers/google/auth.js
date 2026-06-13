@@ -6,7 +6,7 @@
  */
 
 import {
-  ANTIGRAVITY_ACCOUNTS_PATHS,
+  getAntigravityAccountsPaths,
   readJsonFile,
   getAuthEntry,
   normalizeAuthEntry,
@@ -65,7 +65,7 @@ export const resolveGeminiCliAuth = (auth) => {
 };
 
 export const resolveAntigravityAuth = () => {
-  for (const filePath of ANTIGRAVITY_ACCOUNTS_PATHS) {
+  for (const filePath of getAntigravityAccountsPaths()) {
     const data = readJsonFile(filePath);
     const accounts = data?.accounts;
     if (Array.isArray(accounts) && accounts.length > 0) {

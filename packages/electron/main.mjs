@@ -378,13 +378,10 @@ const refreshQuitRiskFlags = async () => {
   }
 };
 
-const defaultDataDir = (() => {
-  if (app.isPackaged) {
-    return path.join(path.dirname(process.execPath), '.config', 'openchamber');
-  }
-  return path.join(path.dirname(fileURLToPath(import.meta.url)), '.config', 'openchamber');
-})();
-
+const exeOrSourceDir = app.isPackaged ? path.dirname(process.execPath) : path.dirname(fileURLToPath(import.meta.url));
+const defaultDataDir = path.join(exeOrSourceDir, '.config', 'openchamber');
+const defaultOpenCodeConfigDir = path.join(exeOrSourceDir, '.config', 'opencode');
+const defaultOpenCodeDataDir = path.join(exeOrSourceDir, '.local', 'share', 'opencode');
 const settingsFilePath = () => {
   if (typeof process.env.OPENCHAMBER_DATA_DIR === 'string' && process.env.OPENCHAMBER_DATA_DIR.trim()) {
     return path.join(process.env.OPENCHAMBER_DATA_DIR.trim(), 'settings.json');
@@ -1106,6 +1103,29 @@ const spawnLocalServer = async () => {
   process.env.OPENCHAMBER_DESKTOP_NOTIFY = 'true';
   if (!process.env.OPENCHAMBER_DATA_DIR) {
     process.env.OPENCHAMBER_DATA_DIR = defaultDataDir;
+  }
+  // If settings.opencodeBinary is configured and name contains "mimo", switch to
+  // mimocode layout: MIMOCODE_HOME drives config/data under the mimocode directory.
+  // The mimocode branch uses unconditional assignment (=) to override any system env,
+  // which is safe because the user explicitly opted into mimocode mode via settings.
+  // The non-mimo branch keeps the guard pattern (if (!process.env.X)) so intentionally-set
+  // system env vars are preserved.
+  let opencodeBinary = typeof settings.opencodeBinary === 'string' ? settings.opencodeBinary.trim() : '';
+  if (opencodeBinary.startsWith('./')) {
+    opencodeBinary = path.resolve(exeOrSourceDir, opencodeBinary);
+  }
+  if (opencodeBinary && path.basename(opencodeBinary).toLowerCase().includes('mimo')) {
+    process.env.MIMOCODE_HOME = path.dirname(opencodeBinary);
+    process.env.OPENCODE_CONFIG_DIR = path.join(process.env.MIMOCODE_HOME, 'config');
+    process.env.OPENCODE_DATA_DIR = path.join(process.env.MIMOCODE_HOME, 'data');
+  } else {
+    delete process.env.MIMOCODE_HOME;
+    if (!process.env.OPENCODE_CONFIG_DIR) {
+      process.env.OPENCODE_CONFIG_DIR = defaultOpenCodeConfigDir;
+    }
+    if (!process.env.OPENCODE_DATA_DIR) {
+      process.env.OPENCODE_DATA_DIR = defaultOpenCodeDataDir;
+    }
   }
   if (desktopUiPassword) {
     process.env.OPENCHAMBER_UI_PASSWORD = desktopUiPassword;

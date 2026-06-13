@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
-const OPENCODE_DATA_DIR = path.join(os.homedir(), '.local', 'share', 'opencode');
+const OPENCODE_DATA_DIR = process.env.OPENCODE_DATA_DIR || path.join(os.homedir(), '.local', 'share', 'opencode');
 const AUTH_FILE = path.join(OPENCODE_DATA_DIR, 'auth.json');
 
 type AuthEntry = Record<string, unknown>;

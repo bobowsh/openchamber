@@ -120,16 +120,18 @@ export type ProviderResult = {
   error?: string;
 };
 
-const OPENCODE_CONFIG_DIR = path.join(os.homedir(), '.config', 'opencode');
-const OPENCODE_DATA_DIR = path.join(os.homedir(), '.local', 'share', 'opencode');
+const OPENCODE_DATA_DIR = process.env.OPENCODE_DATA_DIR || path.join(os.homedir(), '.local', 'share', 'opencode');
 const AUTH_FILE = path.join(OPENCODE_DATA_DIR, 'auth.json');
 const OLLAMA_CLOUD_COOKIE_PATH = path.join(os.homedir(), '.config', 'ollama-quota', 'cookie');
 
 
-const ANTIGRAVITY_ACCOUNTS_PATHS = [
-  path.join(OPENCODE_CONFIG_DIR, 'antigravity-accounts.json'),
-  path.join(OPENCODE_DATA_DIR, 'antigravity-accounts.json'),
-];
+function getAntigravityAccountsPaths() {
+  const configDir = process.env.OPENCODE_CONFIG_DIR || path.join(os.homedir(), '.config', 'opencode');
+  return [
+    path.join(configDir, 'antigravity-accounts.json'),
+    path.join(OPENCODE_DATA_DIR, 'antigravity-accounts.json'),
+  ];
+}
 
 // OAuth Secret value used to init client
 // Note: It's ok to save this in git because this is an installed application
@@ -582,7 +584,7 @@ const resolveGeminiCliAuth = (auth: AuthFile): GoogleAuthSource | null => {
 };
 
 const resolveAntigravityAuth = (): GoogleAuthSource | null => {
-  for (const filePath of ANTIGRAVITY_ACCOUNTS_PATHS) {
+  for (const filePath of getAntigravityAccountsPaths()) {
     const data = readJsonFile(filePath);
     const accounts = data?.accounts;
     if (Array.isArray(accounts) && accounts.length > 0) {
