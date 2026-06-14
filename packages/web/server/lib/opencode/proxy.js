@@ -517,7 +517,8 @@ export const registerOpenCodeProxy = (app, deps) => {
         const globalPayload = globalRes.ok ? await globalRes.json().catch(() => []) : [];
         const globalSessions = Array.isArray(globalPayload) ? globalPayload : [];
 
-        const settingsPath = path.join(os.homedir(), '.config', 'openchamber', 'settings.json');
+        const dataDir = process.env.OPENCHAMBER_DATA_DIR || path.join(os.homedir(), '.config', 'openchamber');
+        const settingsPath = path.join(dataDir, 'settings.json');
         let projectDirs = [];
         try {
           const settingsRaw = fs.readFileSync(settingsPath, 'utf8');

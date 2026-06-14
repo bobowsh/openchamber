@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, nativeTheme, net as electronNet, Notification, powerMonitor, protocol, screen, session, shell, webContents } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, nativeTheme, net as electronNet, Notification, powerMonitor, protocol, screen, session, shell, webContents } from 'electron';
 import contextMenu from 'electron-context-menu';
 import log from 'electron-log/main.js';
 import dgram from 'node:dgram';
@@ -379,8 +379,8 @@ const refreshQuitRiskFlags = async () => {
 };
 
 const exeOrSourceDir = app.isPackaged ? path.dirname(process.execPath) : path.dirname(fileURLToPath(import.meta.url));
-const defaultDataDir = path.join(exeOrSourceDir, '.config', 'openchamber');
-const defaultOpenCodeConfigDir = path.join(exeOrSourceDir, '.config', 'opencode');
+const defaultDataDir = path.join(exeOrSourceDir, 'config', 'openchamber');
+const defaultOpenCodeConfigDir = path.join(exeOrSourceDir, 'config', 'opencode');
 const defaultOpenCodeDataDir = path.join(exeOrSourceDir, '.local', 'share', 'opencode');
 const settingsFilePath = () => {
   if (typeof process.env.OPENCHAMBER_DATA_DIR === 'string' && process.env.OPENCHAMBER_DATA_DIR.trim()) {
@@ -765,8 +765,7 @@ const isPortFree = async (port, host = '127.0.0.1') => {
 };
 
 // Return the LAN IPv4 of the interface that routes to the public internet.
-// UDP "connect" is a kernel-side route lookup — no packet actually goes out —
-// and it picks the same interface as a real outbound connection, which is what
+// UDP "connect" is a kernel-side route lookup �?no packet actually goes out �?// and it picks the same interface as a real outbound connection, which is what
 // a phone on the same Wi-Fi needs to reach us. Falls back to scanning
 // os.networkInterfaces() if the socket trick fails (e.g. no default route).
 const detectLanIPv4Address = async () => {
@@ -1036,7 +1035,7 @@ const loadShellEnv = () => {
 import { pathLooksUserConfigured, mergePathValues } from '@openchamber/web/server/lib/opencode/path-utils.js';
 
 // import/start the server in-process. The server and its children (opencode
-// CLI, git, etc.) inherit process.env directly now — there is no sidecar
+// CLI, git, etc.) inherit process.env directly now �?there is no sidecar
 // subprocess to hand a custom env to.
 const inheritUserShellEnv = () => {
   const shellEnv = loadShellEnv();
@@ -1072,7 +1071,7 @@ const spawnLocalServer = async () => {
   const bindHost = lanAccessEnabled ? LAN_BIND_HOST : LOOPBACK_BIND_HOST;
   const desktopUiPassword = typeof settings.desktopUiPassword === 'string' ? settings.desktopUiPassword.trim() : '';
 
-  // Probe before starting the server — main() in the server module sets up a
+  // Probe before starting the server �?main() in the server module sets up a
   // lot of global state before binding, and calling it twice after a listen
   // failure would double-wire runtimes. Pick a known-free port in one shot.
   const candidates = [storedPort, DEFAULT_DESKTOP_PORT].filter((v) => Number.isFinite(v) && v > 0);
@@ -1104,28 +1103,15 @@ const spawnLocalServer = async () => {
   if (!process.env.OPENCHAMBER_DATA_DIR) {
     process.env.OPENCHAMBER_DATA_DIR = defaultDataDir;
   }
-  // If settings.opencodeBinary is configured and name contains "mimo", switch to
-  // mimocode layout: MIMOCODE_HOME drives config/data under the mimocode directory.
-  // The mimocode branch uses unconditional assignment (=) to override any system env,
-  // which is safe because the user explicitly opted into mimocode mode via settings.
-  // The non-mimo branch keeps the guard pattern (if (!process.env.X)) so intentionally-set
-  // system env vars are preserved.
+  // 统一配置目录：OPENCODE_CONFIG_DIR 始终指向 EXE �?/config/opencode
+  // 如果 opencodeBinary �?mimo，额外设�?MIMOCODE_CONFIG_DIR 指向同一目录
+  process.env.OPENCODE_CONFIG_DIR = defaultOpenCodeConfigDir;
   let opencodeBinary = typeof settings.opencodeBinary === 'string' ? settings.opencodeBinary.trim() : '';
   if (opencodeBinary.startsWith('./')) {
     opencodeBinary = path.resolve(exeOrSourceDir, opencodeBinary);
   }
   if (opencodeBinary && path.basename(opencodeBinary).toLowerCase().includes('mimo')) {
-    process.env.MIMOCODE_HOME = path.dirname(opencodeBinary);
-    process.env.OPENCODE_CONFIG_DIR = path.join(process.env.MIMOCODE_HOME, 'config');
-    process.env.OPENCODE_DATA_DIR = path.join(process.env.MIMOCODE_HOME, 'data');
-  } else {
-    delete process.env.MIMOCODE_HOME;
-    if (!process.env.OPENCODE_CONFIG_DIR) {
-      process.env.OPENCODE_CONFIG_DIR = defaultOpenCodeConfigDir;
-    }
-    if (!process.env.OPENCODE_DATA_DIR) {
-      process.env.OPENCODE_DATA_DIR = defaultOpenCodeDataDir;
-    }
+    process.env.MIMOCODE_CONFIG_DIR = process.env.OPENCODE_CONFIG_DIR;
   }
   if (desktopUiPassword) {
     process.env.OPENCHAMBER_UI_PASSWORD = desktopUiPassword;
@@ -1787,7 +1773,7 @@ const dispatchMenuAction = (action) => {
 };
 
 // Mini-chat draft windows are not deduplicated, so this must reach the renderer
-// exactly once — emitToWindow alone (no DOM-event double dispatch). The renderer
+// exactly once �?emitToWindow alone (no DOM-event double dispatch). The renderer
 // resolves the active directory/project and opens the window.
 const dispatchOpenMiniChat = (browserWindow) => {
   const target = browserWindow && !browserWindow.isDestroyed() ? browserWindow : getMenuTargetWindow();
@@ -1877,7 +1863,7 @@ const createBrowserWindow = ({ label, restoreGeometry, url, runtimeConfig = {} }
     backgroundColor: useVibrancy ? '#00000000' : '#151313',
     // Vibrancy is applied after the window is shown (see applyMacVibrancy), not
     // here: setting it in the constructor leaves the material uncomposited on a
-    // cold launch until a window event. No `transparent: true` either — vibrancy
+    // cold launch until a window event. No `transparent: true` either �?vibrancy
     // alone is enough and composites reliably once applied to a live window.
     frame: process.platform === 'win32' ? false : undefined,
     autoHideMenuBar: autoHidesNativeMenuBar,
@@ -1903,23 +1889,12 @@ const createBrowserWindow = ({ label, restoreGeometry, url, runtimeConfig = {} }
       webviewTag: true,
       // sandbox must stay off: the preload uses contextBridge + ipcRenderer
       // from Electron's Node layer. contextIsolation + nodeIntegration:false
-      // keep the renderer world walled off from Node. Do NOT flip to true —
-      // the preload would fail to load and the desktop bridge would be unavailable.
+      // keep the renderer world walled off from Node. Do NOT flip to true �?      // the preload would fail to load and the desktop bridge would be unavailable.
       sandbox: false,
     },
   };
 
   const browserWindow = new BrowserWindow(options);
-  if (windowIconPath && process.platform === 'win32') {
-    try {
-      const winIcon = nativeImage.createFromPath(windowIconPath);
-      if (!winIcon.isEmpty()) {
-        browserWindow.setIcon(winIcon);
-      }
-    } catch {
-      // Taskbar icon is best-effort on frameless Windows windows
-    }
-  }
   browserWindow.__ocLabel = label || nextWindowLabel();
   browserWindow.__ocRuntimeConfig = { apiBaseUrl: desktopApiBaseUrl, clientToken: desktopClientToken };
   browserWindow.__ocInitScript = buildInitScript(desktopLocalOrigin, state.bootOutcome, desktopApiBaseUrl, desktopClientToken);
@@ -1960,8 +1935,8 @@ const createBrowserWindow = ({ label, restoreGeometry, url, runtimeConfig = {} }
       scheduleMacVibrancyReady(browserWindow, 180);
     });
     // Only suppress vibrancy around the minimize/restore cycle (it flashes raw
-    // transparency during the genie animation). A plain show — cold launch from
-    // the dock, un-hide — must NOT suppress, or the sidebar gets stuck solid
+    // transparency during the genie animation). A plain show �?cold launch from
+    // the dock, un-hide �?must NOT suppress, or the sidebar gets stuck solid
     // when the post-show `ready` re-enable is skipped while the window is still
     // animating in.
     browserWindow.on('show', refreshTrafficLights);
@@ -2229,7 +2204,7 @@ const createMiniChatWindow = async ({ mode, sessionId = '', directory = '', proj
     backgroundColor: useVibrancy ? '#00000000' : '#151313',
     // Vibrancy is applied after the window is shown (see applyMacVibrancy), not
     // here: setting it in the constructor leaves the material uncomposited on a
-    // cold launch until a window event. No `transparent: true` either — vibrancy
+    // cold launch until a window event. No `transparent: true` either �?vibrancy
     // alone is enough and composites reliably once applied to a live window.
     frame: process.platform === 'win32' ? false : undefined,
     autoHideMenuBar: process.platform !== 'darwin',
@@ -3786,7 +3761,7 @@ const buildMacMenu = () => {
         { type: 'separator' },
         { label: 'New Session', accelerator: 'Cmd+N', click: () => dispatchAction('new-session') },
         { label: 'New Worktree', accelerator: 'Cmd+Shift+N', click: () => dispatchAction('new-worktree-session') },
-        // registerAccelerator:false → show the shortcut hint but let the
+        // registerAccelerator:false �?show the shortcut hint but let the
         // renderer own the (customizable) key binding, avoiding a double open.
         { label: 'New Mini Chat', accelerator: 'Cmd+Alt+N', registerAccelerator: false, click: () => dispatchOpenMiniChat() },
         { type: 'separator' },
@@ -3997,7 +3972,7 @@ app.on('web-contents-created', (_event, contents) => {
 });
 
 // All desktop_* IPC and dialog:open run with full Electron main privileges
-// (fs access, shell.openPath, spawn, app.relaunch, …). The preload shim is
+// (fs access, shell.openPath, spawn, app.relaunch, �?. The preload shim is
 // injected into every webContents in the window, including remote hosts the
 // user switches to via DesktopHostSwitcher. Without a gate, a malicious
 // remote page could read arbitrary local files, open arbitrary apps, etc.
@@ -4006,7 +3981,7 @@ app.on('web-contents-created', (_event, contents) => {
 // Window/host-switcher operations (probe a URL, open a new window, set
 // title, read the hosts list) are safe for any renderer. Filesystem,
 // shell.openPath, installed-app scans, app relaunch, and file dialogs
-// are gated to local senders — even the user's own remote UI shouldn't
+// are gated to local senders �?even the user's own remote UI shouldn't
 // need them, and a compromised remote can't use them either.
 const isLocalSender = (webContents) => {
   try {
@@ -4099,7 +4074,7 @@ ipcMain.handle('openchamber:dialog:open', async (event, options) => {
 // --- macOS menu bar (status bar) ---------------------------------------------
 // Tray lives only on macOS; the renderer streams a compact state snapshot via
 // the `desktop_tray_update` IPC command (see the command switch). Tray clicks
-// flow back through dispatchTrayAction → renderer (focus/respond) or native
+// flow back through dispatchTrayAction �?renderer (focus/respond) or native
 // handlers (show window / quit).
 
 // Icon assets: a calm outline (idle), a statically filled cube (a finished
@@ -4168,7 +4143,7 @@ const setupTray = () => {
 };
 
 // Bring the existing main window forward WITHOUT re-navigating it. Only when
-// no live window exists (truly closed) do we recreate one — recreation reloads,
+// no live window exists (truly closed) do we recreate one �?recreation reloads,
 // but showing an existing window must not. This mirrors desktop_focus_main_window
 // and the notification "open session" path; calling openMainWindow on a live
 // window navigates it (full reload), which is the bug we're avoiding here.
@@ -4187,8 +4162,7 @@ const revealMainWindow = async () => {
 
 // Open a session in the main window, creating one first if none is alive. A
 // freshly created window can't receive an immediate emit (its renderer hasn't
-// mounted its listeners yet), so we queue the session as a pending deep-link —
-// the did-finish-load handler flushes it once the window is ready.
+// mounted its listeners yet), so we queue the session as a pending deep-link �?// the did-finish-load handler flushes it once the window is ready.
 const focusMainWindowWithSession = async (sessionId, directory) => {
   if (state.mainWindow && !state.mainWindow.isDestroyed()) {
     if (state.mainWindow.isMinimized()) state.mainWindow.restore();
@@ -4211,7 +4185,7 @@ const dispatchTrayAction = async (action) => {
     return;
   }
 
-  // Responding to a permission doesn't need to steal focus — just deliver it.
+  // Responding to a permission doesn't need to steal focus �?just deliver it.
   if (action.type === 'respond-permission') {
     const target = (state.mainWindow && !state.mainWindow.isDestroyed())
       ? state.mainWindow
@@ -4318,8 +4292,8 @@ app.on('activate', async () => {
     return;
   }
 
-  // Otherwise bring back the surface the user was last on — restoring it if
-  // minimized — instead of surfacing a hidden window or creating a new one.
+  // Otherwise bring back the surface the user was last on �?restoring it if
+  // minimized �?instead of surfacing a hidden window or creating a new one.
   // This covers e.g. "only a minimized mini-chat remains": it should un-minimize
   // rather than open the main window.
   const remembered = resolveTraySurface();

@@ -9,8 +9,9 @@ const SKILL_NAME_PATTERN = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
 
 function normalizeUserSkillDir(userSkillDir) {
   if (!userSkillDir) return null;
-  const legacySkillDir = path.join(os.homedir(), '.config', 'opencode', 'skill');
-  const pluralSkillDir = path.join(os.homedir(), '.config', 'opencode', 'skills');
+  const configDir = process.env.OPENCODE_CONFIG_DIR || path.join(os.homedir(), '.config', 'opencode');
+  const legacySkillDir = path.join(configDir, 'skill');
+  const pluralSkillDir = path.join(configDir, 'skills');
   if (userSkillDir === legacySkillDir) {
     if (fs.existsSync(legacySkillDir) && !fs.existsSync(pluralSkillDir)) return legacySkillDir;
     return pluralSkillDir;

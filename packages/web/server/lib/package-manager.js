@@ -20,6 +20,7 @@ function getSpawnSyncBaseOptions() {
 const UPDATE_CHECK_URL = process.env.OPENCHAMBER_UPDATE_API_URL || 'https://api.openchamber.dev/v1/update/check';
 
 function getOpenChamberConfigDir() {
+  if (process.env.OPENCHAMBER_DATA_DIR) return process.env.OPENCHAMBER_DATA_DIR;
   if (process.platform === 'win32') {
     const appData = process.env.APPDATA;
     if (appData) return path.join(appData, 'openchamber');
