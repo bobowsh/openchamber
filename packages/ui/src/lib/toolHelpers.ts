@@ -1,5 +1,6 @@
 export interface ToolMetadata {
   displayName: string;
+  i18nKey?: string;
   icon?: string;
   outputLanguage?: string;
   inputFields?: {
@@ -15,6 +16,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
 
   read: {
     displayName: 'Read File',
+    i18nKey: 'tool.read',
     category: 'file',
     outputLanguage: 'auto',
     inputFields: [
@@ -25,6 +27,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
   },
   write: {
     displayName: 'Write File',
+    i18nKey: 'tool.write',
     category: 'file',
     outputLanguage: 'auto',
     inputFields: [
@@ -34,6 +37,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
   },
   edit: {
     displayName: 'Edit File',
+    i18nKey: 'tool.edit',
     category: 'file',
     outputLanguage: 'diff',
     inputFields: [
@@ -45,6 +49,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
   },
   multiedit: {
     displayName: 'Multi-Edit',
+    i18nKey: 'tool.multiedit',
     category: 'file',
     outputLanguage: 'diff',
     inputFields: [
@@ -54,6 +59,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
   },
   apply_patch: {
     displayName: 'Apply Patch',
+    i18nKey: 'tool.applyPatch',
     category: 'file',
     outputLanguage: 'diff',
     inputFields: [
@@ -63,6 +69,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
 
   bash: {
     displayName: 'Shell Command',
+    i18nKey: 'tool.bash',
     category: 'system',
     outputLanguage: 'text',
     inputFields: [
@@ -74,6 +81,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
 
   grep: {
     displayName: 'Search Files',
+    i18nKey: 'tool.grep',
     category: 'search',
     outputLanguage: 'text',
     inputFields: [
@@ -84,6 +92,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
   },
   glob: {
     displayName: 'Find Files',
+    i18nKey: 'tool.glob',
     category: 'search',
     outputLanguage: 'text',
     inputFields: [
@@ -93,6 +102,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
   },
   list: {
     displayName: 'List Directory',
+    i18nKey: 'tool.list',
     category: 'file',
     outputLanguage: 'text',
     inputFields: [
@@ -103,6 +113,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
 
   task: {
     displayName: 'Agent Task',
+    i18nKey: 'tool.task',
     category: 'ai',
     outputLanguage: 'markdown',
     inputFields: [
@@ -114,6 +125,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
 
   webfetch: {
     displayName: 'Fetch URL',
+    i18nKey: 'tool.webfetch',
     category: 'web',
     outputLanguage: 'auto',
     inputFields: [
@@ -125,6 +137,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
 
    websearch: {
      displayName: 'Web Search',
+     i18nKey: 'tool.websearch',
      category: 'web',
      outputLanguage: 'markdown',
      inputFields: [
@@ -135,6 +148,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
    },
    codesearch: {
      displayName: 'Code Search',
+     i18nKey: 'tool.codesearch',
      category: 'web',
      outputLanguage: 'markdown',
      inputFields: [
@@ -145,6 +159,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
 
    todowrite: {
      displayName: 'Update Todo List',
+     i18nKey: 'tool.todowrite',
      category: 'system',
      outputLanguage: 'json',
      inputFields: [
@@ -153,30 +168,34 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
    },
    todoread: {
      displayName: 'Read Todo List',
+     i18nKey: 'tool.todoread',
      category: 'system',
      outputLanguage: 'json',
      inputFields: []
    },
    skill: {
      displayName: 'Load Skill',
+     i18nKey: 'tool.skill',
      category: 'ai',
      outputLanguage: 'markdown',
      inputFields: [
        { key: 'name', label: 'Skill Name', type: 'text' }
      ]
    },
-    question: {
-       displayName: 'Question',
-       category: 'ai',
+   question: {
+        displayName: 'Question',
+        i18nKey: 'tool.question',
+        category: 'ai',
        outputLanguage: 'text',
        inputFields: [
          { key: 'questions', label: 'Questions', type: 'code', language: 'json' }
        ]
      },
 
-    lsp: {
-      displayName: 'LSP',
-      category: 'code',
+   lsp: {
+       displayName: 'LSP',
+       i18nKey: 'tool.lsp',
+       category: 'code',
       outputLanguage: 'json',
       inputFields: [
         { key: 'operation', label: 'Operation', type: 'text' },
@@ -187,30 +206,34 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
       ]
     },
 
-    plan_enter: {
-      displayName: 'Plan Mode',
-      category: 'ai',
+   plan_enter: {
+       displayName: 'Plan Mode',
+       i18nKey: 'tool.planMode',
+       category: 'ai',
       outputLanguage: 'text',
       inputFields: []
     },
 
-    plan_exit: {
-      displayName: 'Build Mode',
-      category: 'ai',
+   plan_exit: {
+       displayName: 'Build Mode',
+       i18nKey: 'tool.buildMode',
+       category: 'ai',
       outputLanguage: 'text',
       inputFields: []
     },
 
-    StructuredOutput: {
-      displayName: 'Structured Output',
-      category: 'ai',
+   StructuredOutput: {
+       displayName: 'Structured Output',
+       i18nKey: 'tool.structuredOutput',
+       category: 'ai',
       outputLanguage: 'json',
       inputFields: []
     },
 
-    structuredoutput: {
-      displayName: 'Structured Output',
-      category: 'ai',
+   structuredoutput: {
+       displayName: 'Structured Output',
+       i18nKey: 'tool.structuredOutput',
+       category: 'ai',
       outputLanguage: 'json',
       inputFields: []
     }
@@ -222,6 +245,18 @@ function formatUnknownToolDisplayName(toolName: string): string {
     .replace(/[_-]+/g, ' ')
     .replace(/\s+/g, ' ')
     .replace(/^./, (char) => char.toUpperCase());
+}
+
+export function getToolDisplayName(
+  toolName: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t?: { (key: any): string }
+): string {
+  const metadata = getToolMetadata(toolName);
+  if (t && metadata.i18nKey) {
+    return t(metadata.i18nKey);
+  }
+  return metadata.displayName;
 }
 
 export function getToolMetadata(toolName: string): ToolMetadata {

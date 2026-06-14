@@ -5,7 +5,7 @@ import { RuntimeAPIContext } from '@/contexts/runtimeAPIContext';
 import { PatchDiff } from '@pierre/diffs/react';
 import { cn } from '@/lib/utils';
 import { SimpleMarkdownRenderer } from '../../MarkdownRenderer';
-import { getToolMetadata } from '@/lib/toolHelpers';
+import { getToolDisplayName, getToolMetadata } from '@/lib/toolHelpers';
 import type { ToolPart as ToolPartType, ToolState as ToolStateUnion } from '@opencode-ai/sdk/v2';
 import { toolDisplayStyles } from '@/lib/typography';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -1276,7 +1276,7 @@ const TaskToolSummary: React.FC<{
                             const hasLabel = label.trim().length > 0;
                             const status = entry.state?.status;
 
-                            const displayName = getToolMetadata(toolName).displayName;
+                            const displayName = getToolDisplayName(toolName, t);
 
                             return (
                                 <ToolRevealOnMount key={entry.id ?? `${toolName}-${idx}`} animate={animateTailText} wipe>
@@ -1926,6 +1926,7 @@ const ToolPartContent: React.FC<ToolPartProps> = ({
     onShowPopup,
     animateTailText = true,
 }) => {
+    const { t } = useI18n();
     const state = part.state;
     const showToolFileIcons = useUIStore((s) => s.showToolFileIcons);
     const currentDirectory = useDirectoryStore((s) => s.currentDirectory);
@@ -2573,7 +2574,7 @@ const ToolPartContent: React.FC<ToolPartProps> = ({
     const normalizedPart = normalizedPartTool !== part.tool ? ({ ...part, tool: normalizedPartTool } as ToolPartType) : part;
     const descriptionPath = getToolDescriptionPath(normalizedPart, state, currentDirectory);
     const description = getToolDescription(normalizedPart, state, currentDirectory);
-    const displayName = getToolMetadata(normalizedPartTool || part.tool).displayName;
+    const displayName = getToolDisplayName(normalizedPartTool || part.tool, t);
     
     // Tool title/description — shown inline as context
     const justificationText = React.useMemo(() => {
@@ -2899,7 +2900,7 @@ class ToolPartErrorBoundary extends React.Component<{
 const ToolPart: React.FC<ToolPartProps> = (props) => {
     const { t } = useI18n();
     const toolName = normalizeToolName(props.part.tool) || 'tool';
-    const displayName = getToolMetadata(toolName).displayName;
+    const displayName = getToolDisplayName(toolName, t);
 
     return (
         <ToolPartErrorBoundary

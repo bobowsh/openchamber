@@ -2582,6 +2582,28 @@ export const dict = {
   'vscodeLayout.actions.archiveAllSuccess': '{count} session(s) archivée(s)',
   'vscodeLayout.actions.archiveAllError': 'Impossible d’archiver {count} session(s)',
   'vscodeLayout.actions.cancel': 'Annuler',
+
+  'tool.read': 'Read File',
+  'tool.write': 'Write File',
+  'tool.edit': 'Edit File',
+  'tool.multiedit': 'Multi-Edit',
+  'tool.applyPatch': 'Apply Patch',
+  'tool.list': 'List Directory',
+  'tool.grep': 'Search Files',
+  'tool.glob': 'Find Files',
+  'tool.bash': 'Shell Command',
+  'tool.todowrite': 'Update Todo List',
+  'tool.todoread': 'Read Todo List',
+  'tool.task': 'Agent Task',
+  'tool.skill': 'Load Skill',
+  'tool.question': 'Question',
+  'tool.lsp': 'LSP',
+  'tool.planMode': 'Plan Mode',
+  'tool.buildMode': 'Build Mode',
+  'tool.structuredOutput': 'Structured Output',
+  'tool.webfetch': 'Fetch URL',
+  'tool.websearch': 'Web Search',
+  'tool.codesearch': 'Code Search',
 } as const;
 
 export type I18nKey = keyof typeof dict;
