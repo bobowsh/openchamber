@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, nativeTheme, net as electronNet, Notification, powerMonitor, protocol, screen, session, shell, webContents } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, nativeTheme, net as electronNet, Notification, powerMonitor, protocol, screen, session, shell, webContents } from 'electron';
 import contextMenu from 'electron-context-menu';
 import log from 'electron-log/main.js';
 import dgram from 'node:dgram';
@@ -1910,6 +1910,16 @@ const createBrowserWindow = ({ label, restoreGeometry, url, runtimeConfig = {} }
   };
 
   const browserWindow = new BrowserWindow(options);
+  if (windowIconPath && process.platform === 'win32') {
+    try {
+      const winIcon = nativeImage.createFromPath(windowIconPath);
+      if (!winIcon.isEmpty()) {
+        browserWindow.setIcon(winIcon);
+      }
+    } catch {
+      // Taskbar icon is best-effort on frameless Windows windows
+    }
+  }
   browserWindow.__ocLabel = label || nextWindowLabel();
   browserWindow.__ocRuntimeConfig = { apiBaseUrl: desktopApiBaseUrl, clientToken: desktopClientToken };
   browserWindow.__ocInitScript = buildInitScript(desktopLocalOrigin, state.bootOutcome, desktopApiBaseUrl, desktopClientToken);

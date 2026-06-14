@@ -529,7 +529,10 @@ export async function archiveSession(sessionId: string): Promise<boolean> {
     if (!archived) {
       throw new Error("session.update failed: server did not return the archived session")
     }
-    useGlobalSessionsStore.getState().upsertSession(archived)
+    // updateSession 的 PATCH 返回值可能不包含 directory / project 等字段，
+    // 合并 globalSnapshot 以保留完整会话信息，确保侧边栏能正确归类。
+    const restored = globalSnapshot ? { ...globalSnapshot, ...archived, time: { ...globalSnapshot.time, ...archived.time } } : archived
+    useGlobalSessionsStore.getState().upsertSession(restored)
     return true
   } catch (error) {
     console.error("[session-actions] archiveSession failed", error)
