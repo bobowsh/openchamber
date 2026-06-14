@@ -19,6 +19,7 @@ changelog-*.png
 /npm
 /tsc
 /openchamber@*
+packages/web/openchamber.exe
 local-dev*
 .tmp/
 # Editor directories and files
