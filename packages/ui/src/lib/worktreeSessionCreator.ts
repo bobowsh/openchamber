@@ -375,7 +375,7 @@ export async function createWorktreeSessionForBranch(
   try {
     const projectRef = resolveProjectRef(projectDirectory);
     if (!projectRef) {
-      throw new Error('Project is not registered in OpenChamber');
+      throw new Error('Project is not registered in LinkCode');
     }
 
     // Check if it's a git repo (root project path)
@@ -480,7 +480,7 @@ export async function createWorktreeSessionForNewBranch(
 
     const projectRef = resolveProjectRef(projectDirectory);
     if (!projectRef) {
-      throw new Error('Project is not registered in OpenChamber');
+      throw new Error('Project is not registered in LinkCode');
     }
 
     let isGitRepo = false;

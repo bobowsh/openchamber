@@ -160,7 +160,7 @@ export const registerOpenChamberRoutes = (app, dependencies) => {
       const updateLogPath = path.join(openchamberDataDir, 'update-install.log');
       const logPreamble = [
         '',
-        `=== OpenChamber update ${new Date().toISOString()} ===`,
+        `=== LinkCode update ${new Date().toISOString()} ===`,
         `currentVersion=${updateInfo.currentVersion || 'unknown'}`,
         `targetVersion=${updateInfo.version || 'unknown'}`,
         `packageManager=${pm}`,
@@ -197,8 +197,8 @@ export const registerOpenChamberRoutes = (app, dependencies) => {
             timeout /t 2 /nobreak >nul
             ${updateCmd}
             if %ERRORLEVEL% EQU 0 (
-              echo Update successful, restarting OpenChamber...
-              ${restartCmd || 'echo Service manager will restart OpenChamber.'}
+              echo Update successful, restarting LinkCode...
+              ${restartCmd || 'echo Service manager will restart LinkCode.'}
             ) else (
               echo Update failed
               exit /b 1
@@ -209,8 +209,8 @@ export const registerOpenChamberRoutes = (app, dependencies) => {
             sleep 2
             ${updateCmd}
             if [ $? -eq 0 ]; then
-              echo "Update successful, restarting OpenChamber..."
-              ${restartCmd || 'echo "Service manager will restart OpenChamber."'}
+              echo "Update successful, restarting LinkCode..."
+              ${restartCmd || 'echo "Service manager will restart LinkCode."'}
             else
               echo "Update failed"
               exit 1

@@ -38,7 +38,7 @@ const formatDurationMs = (value: number | null | undefined) => {
 };
 
 export async function activate(context: vscode.ExtensionContext) {
-  outputChannel = vscode.window.createOutputChannel('OpenChamber');
+  outputChannel = vscode.window.createOutputChannel('LinkCode');
 
   let moveToRightSidebarScheduled = false;
 
@@ -85,7 +85,7 @@ export async function activate(context: vscode.ExtensionContext) {
       return 'moved';
     } catch (error) {
       outputChannel?.appendLine(
-        `[OpenChamber] Failed moving chat view to right sidebar (command=${moveCommandId}): ${error instanceof Error ? error.message : String(error)}`
+        `[LinkCode] Failed moving chat view to right sidebar (command=${moveCommandId}): ${error instanceof Error ? error.message : String(error)}`
       );
       return 'failed';
     }
@@ -143,20 +143,20 @@ export async function activate(context: vscode.ExtensionContext) {
       try {
         await vscode.commands.executeCommand('workbench.view.extension.openchamber');
       } catch (e) {
-        outputChannel?.appendLine(`[OpenChamber] workbench.view.extension.openchamber failed: ${e}`);
+        outputChannel?.appendLine(`[LinkCode] workbench.view.extension.openchamber failed: ${e}`);
       }
 
       try {
         await vscode.commands.executeCommand('openchamber.chatView.focus');
       } catch (e) {
-        outputChannel?.appendLine(`[OpenChamber] openchamber.chatView.focus failed: ${e}`);
-        vscode.window.showErrorMessage(t('OpenChamber: Failed to open sidebar - {0}', String(e)));
+        outputChannel?.appendLine(`[LinkCode] openchamber.chatView.focus failed: ${e}`);
+        vscode.window.showErrorMessage(t('LinkCode: Failed to open sidebar - {0}', String(e)));
         return false;
       }
 
       if (!chatViewProvider?.hasResolvedView()) {
-        outputChannel?.appendLine('[OpenChamber] Chat sidebar focus completed before the webview was resolved');
-        vscode.window.showWarningMessage(t('OpenChamber: Chat sidebar is not ready'));
+        outputChannel?.appendLine('[LinkCode] Chat sidebar focus completed before the webview was resolved');
+        vscode.window.showWarningMessage(t('LinkCode: Chat sidebar is not ready'));
         return false;
       }
 
@@ -172,8 +172,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
     await waitForChatViewBootstrap();
     if (!chatViewProvider?.hasResolvedView()) {
-      outputChannel?.appendLine('[OpenChamber] Chat sidebar webview was disposed before payload delivery');
-      vscode.window.showWarningMessage(t('OpenChamber: Chat sidebar is not ready'));
+      outputChannel?.appendLine('[LinkCode] Chat sidebar webview was disposed before payload delivery');
+      vscode.window.showWarningMessage(t('LinkCode: Chat sidebar is not ready'));
       return false;
     }
 
@@ -230,7 +230,7 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('openchamber.openActiveSessionInEditor', () => {
       if (!activeSessionId) {
-        vscode.window.showInformationMessage(t('OpenChamber: No active session'));
+        vscode.window.showInformationMessage(t('LinkCode: No active session'));
         return;
       }
       sessionEditorProvider?.createOrShow(activeSessionId, activeSessionTitle ?? undefined);
@@ -273,9 +273,9 @@ export async function activate(context: vscode.ExtensionContext) {
           return;
         }
         await openCodeManager?.restart();
-        vscode.window.showInformationMessage(t('OpenChamber: API connection restarted'));
+        vscode.window.showInformationMessage(t('LinkCode: API connection restarted'));
       } catch (e) {
-        vscode.window.showErrorMessage(t('OpenChamber: Failed to restart API - {0}', String(e)));
+        vscode.window.showErrorMessage(t('LinkCode: Failed to restart API - {0}', String(e)));
       }
     })
   );
@@ -284,7 +284,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('openchamber.addToContext', async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
-        vscode.window.showWarningMessage(t('OpenChamber [Add to Context]: No active editor'));
+        vscode.window.showWarningMessage(t('LinkCode [Add to Context]: No active editor'));
         return;
       }
 
@@ -292,7 +292,7 @@ export async function activate(context: vscode.ExtensionContext) {
       const selectedText = editor.document.getText(selection);
 
       if (!selectedText) {
-        vscode.window.showWarningMessage(t('OpenChamber [Add to Context]: No text selected'));
+        vscode.window.showWarningMessage(t('LinkCode [Add to Context]: No text selected'));
         return;
       }
 
@@ -373,7 +373,7 @@ export async function activate(context: vscode.ExtensionContext) {
       }
 
       if (attachedFiles.length === 0) {
-        vscode.window.showWarningMessage(t('OpenChamber: No file selected to mention'));
+        vscode.window.showWarningMessage(t('LinkCode: No file selected to mention'));
         return;
       }
 
@@ -385,7 +385,7 @@ export async function activate(context: vscode.ExtensionContext) {
       }
 
       if (skippedEntries.length > 0) {
-        vscode.window.showInformationMessage(t('OpenChamber: Some selected entries were skipped (folders or unsupported resources)'));
+        vscode.window.showInformationMessage(t('LinkCode: Some selected entries were skipped (folders or unsupported resources)'));
       }
     })
   );
@@ -394,7 +394,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('openchamber.explain', async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
-        vscode.window.showWarningMessage(t('OpenChamber [Explain]: No active editor'));
+        vscode.window.showWarningMessage(t('LinkCode [Explain]: No active editor'));
         return;
       }
 
@@ -429,7 +429,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('openchamber.improveCode', async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
-        vscode.window.showWarningMessage(t('OpenChamber [Improve Code]: No active editor'));
+        vscode.window.showWarningMessage(t('LinkCode [Improve Code]: No active editor'));
         return;
       }
 
@@ -437,7 +437,7 @@ export async function activate(context: vscode.ExtensionContext) {
       const selectedText = editor.document.getText(selection);
 
       if (!selectedText) {
-        vscode.window.showWarningMessage(t('OpenChamber [Improve Code]: No text selected'));
+        vscode.window.showWarningMessage(t('LinkCode [Improve Code]: No text selected'));
         return;
       }
 
@@ -464,7 +464,7 @@ export async function activate(context: vscode.ExtensionContext) {
       let folderPath: string | undefined = typeof directory === 'string' ? directory : undefined;
 
       if (!folderPath && candidates.length === 0) {
-        vscode.window.showInformationMessage('OpenChamber: No folder is open. Open a folder to start a new session.');
+        vscode.window.showInformationMessage('LinkCode: No folder is open. Open a folder to start a new session.');
         return;
       }
 
@@ -484,7 +484,7 @@ export async function activate(context: vscode.ExtensionContext) {
       if (openCodeManager) {
         const result = await openCodeManager.setWorkingDirectory(folderPath);
         if (!result.success) {
-          vscode.window.showErrorMessage(`OpenChamber: ${result.error}`);
+          vscode.window.showErrorMessage(`LinkCode: ${result.error}`);
           return;
         }
       }
@@ -624,7 +624,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
       const lines = [
         `Time: ${new Date().toISOString()}`,
-        `OpenChamber version: ${extensionVersion || '(unknown)'}`,
+        `LinkCode version: ${extensionVersion || '(unknown)'}`,
         `OpenCode Version: ${debug?.version ?? '(unknown)'}`,
         `VS Code version: ${vscode.version}`,
         `Platform: ${process.platform} ${process.arch}`,

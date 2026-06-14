@@ -11,7 +11,7 @@ import {
 
 const DEFAULT_STORE_VERSION = 1;
 const DEFAULT_CHALLENGE_TTL_MS = 5 * 60 * 1000;
-const DEFAULT_RP_NAME = 'OpenChamber';
+const DEFAULT_RP_NAME = 'LinkCode';
 
 import { getDefaultDataDir } from '../data-dir.js';
 
@@ -333,7 +333,7 @@ export const createUiPasskeys = ({
       rpID,
       userID,
       userName: 'openchamber-ui',
-      userDisplayName: 'OpenChamber UI',
+      userDisplayName: 'LinkCode UI',
       attestationType: 'none',
       excludeCredentials: getPasskeysForRpId(store, rpID).map((passkey) => ({
         id: passkey.id,
@@ -473,7 +473,7 @@ export const createUiPasskeys = ({
     const passkey = store.passkeys.find((item) => item.id === response?.id);
 
     if (!passkey) {
-      const error = new Error('That passkey is not registered for this OpenChamber instance');
+      const error = new Error('That passkey is not registered for this LinkCode instance');
       error.statusCode = 404;
       throw error;
     }
