@@ -151,7 +151,6 @@ export const DirectoryExplorerDialog: React.FC<DirectoryExplorerDialogProps> = (
   const { isDesktop, requestAccess, startAccessing } = useFileSystemAccess();
   const { isMobile } = useDeviceInfo();
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const addButtonRef = React.useRef<HTMLButtonElement>(null);
   const rowRefs = React.useRef(new Map<string, HTMLButtonElement>());
   const [dialogHomeDirectory, setDialogHomeDirectory] = React.useState('');
   const [query, setQuery] = React.useState('~/');
@@ -161,7 +160,6 @@ export const DirectoryExplorerDialog: React.FC<DirectoryExplorerDialogProps> = (
   const [highlightedIndex, setHighlightedIndex] = React.useState(0);
   const [isConfirming, setIsConfirming] = React.useState(false);
   const [isOpeningFinder, setIsOpeningFinder] = React.useState(false);
-  const [addButtonWidth, setAddButtonWidth] = React.useState(0);
   const [isCloneMode, setIsCloneMode] = React.useState(false);
   const [cloneRemoteUrl, setCloneRemoteUrl] = React.useState('');
   const [selectedGitIdentityId, setSelectedGitIdentityId] = React.useState<string | null>(null);
@@ -354,23 +352,10 @@ export const DirectoryExplorerDialog: React.FC<DirectoryExplorerDialogProps> = (
       : t('directoryExplorerDialog.actions.addProject');
 
   React.useLayoutEffect(() => {
-    const button = addButtonRef.current;
-    if (!button) return;
-
-    const updateWidth = () => setAddButtonWidth(Math.ceil(button.getBoundingClientRect().width));
-    updateWidth();
-
-    if (typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(updateWidth);
-    observer.observe(button);
-    return () => observer.disconnect();
-  }, [submitActionLabel]);
-
-  React.useLayoutEffect(() => {
     const input = inputRef.current;
     if (!input) return;
     input.scrollLeft = input.scrollWidth;
-  }, [addButtonWidth, query]);
+  }, [query]);
 
   React.useLayoutEffect(() => {
     if (!open) return;
@@ -480,7 +465,7 @@ export const DirectoryExplorerDialog: React.FC<DirectoryExplorerDialogProps> = (
         return;
       }
 
-      await finalizeSelection(result.path);
+      browseToDisplayPath(result.path);
     } catch (error) {
       toast.error(t('directoryExplorerDialog.toast.failedToSelectDirectory'), {
         description: error instanceof Error ? error.message : t('directoryExplorerDialog.toast.unknownError'),
@@ -488,7 +473,7 @@ export const DirectoryExplorerDialog: React.FC<DirectoryExplorerDialogProps> = (
     } finally {
       setIsOpeningFinder(false);
     }
-  }, [finalizeSelection, isDesktop, isOpeningFinder, requestAccess, startAccessing, t, targetPath]);
+  }, [browseToDisplayPath, isDesktop, isOpeningFinder, requestAccess, startAccessing, t, targetPath]);
 
   const handleKeyDown = React.useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'ArrowDown') {
@@ -552,36 +537,35 @@ export const DirectoryExplorerDialog: React.FC<DirectoryExplorerDialogProps> = (
           />
         </div>
       ) : null}
-      <div className="relative">
-        <Icon name="folder-add" className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80" />
-        <Input
-          ref={inputRef}
-          value={query}
-          onChange={(event) => setQuery(normalizeSeparators(event.target.value))}
-          onKeyDown={handleKeyDown}
-          placeholder={t('directoryExplorerDialog.pathInput.placeholder')}
-          className="border-transparent bg-transparent pl-9 font-mono typography-ui-label shadow-none focus-visible:ring-0"
-          style={!isMobile && addButtonWidth > 0 ? { paddingRight: `${addButtonWidth + 24}px` } : undefined}
-          spellCheck={false}
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-        />
-        {!isMobile ? (
-          <Button
-            ref={addButtonRef}
-            variant="outline"
-            size="xs"
-            tabIndex={-1}
-            className="absolute right-1.5 top-1/2 h-7 -translate-y-1/2 gap-1 px-2 typography-meta"
-            disabled={isCloneMode ? !canSubmitClone : !canAddProject}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => void finalizeSelection(targetPath)}
-            title={submitActionLabel}
-          >
+      <div className="flex flex-row items-center gap-2">
+        <div className="relative flex-1">
+          <Icon name="folder-add" className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80" />
+          <Input
+            ref={inputRef}
+            value={query}
+            onChange={(event) => setQuery(normalizeSeparators(event.target.value))}
+            onKeyDown={handleKeyDown}
+            placeholder={t('directoryExplorerDialog.pathInput.placeholder')}
+            className="border-transparent bg-transparent pl-9 font-mono typography-ui-label shadow-none focus-visible:ring-0"
+            spellCheck={false}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+          />
+        </div>
+        <div className="flex flex-row items-center gap-2">
+          {isDesktop ? (
+            <Button variant="neutral" size="xs" onClick={handleOpenInFinder} disabled={isConfirming || isOpeningFinder || isCloneMode}>
+              {isOpeningFinder ? t('directoryExplorerDialog.actions.openingFinder') : t('directoryExplorerDialog.actions.openInFinder')}
+            </Button>
+          ) : null}
+          <Button variant="neutral" size="xs" onClick={() => setIsCloneMode((value) => !value)} disabled={isConfirming || isOpeningFinder}>
+            {isCloneMode ? t('directoryExplorerDialog.actions.addLocalProject') : t('directoryExplorerDialog.actions.cloneRepository')}
+          </Button>
+          <Button variant="neutral" size="xs" onClick={() => void finalizeSelection(targetPath)} disabled={isCloneMode ? !canSubmitClone : !canAddProject}>
             {submitActionLabel}
           </Button>
-        ) : null}
+        </div>
       </div>
     </div>
   );
@@ -687,21 +671,16 @@ export const DirectoryExplorerDialog: React.FC<DirectoryExplorerDialogProps> = (
   const renderFooter = () => (
     <>
       {!isMobile ? footerHints : null}
-      <div className={cn('flex w-full flex-row justify-end gap-2 sm:w-auto', isMobile && 'justify-stretch')}>
-        {isDesktop ? (
-          <Button variant="ghost" size="xs" onClick={handleOpenInFinder} disabled={isConfirming || isOpeningFinder || isCloneMode}>
-            {isOpeningFinder ? t('directoryExplorerDialog.actions.openingFinder') : t('directoryExplorerDialog.actions.openInFinder')}
+      {isMobile ? (
+        <div className="flex w-full flex-row justify-stretch gap-2">
+          <Button variant="ghost" size="xs" onClick={() => setIsCloneMode((value) => !value)} disabled={isConfirming || isOpeningFinder} className="flex-1">
+            {isCloneMode ? t('directoryExplorerDialog.actions.addLocalProject') : t('directoryExplorerDialog.actions.cloneRepository')}
           </Button>
-        ) : null}
-        <Button variant="ghost" size="xs" onClick={() => setIsCloneMode((value) => !value)} disabled={isConfirming || isOpeningFinder} className={cn(isMobile && 'flex-1')}>
-          {isCloneMode ? t('directoryExplorerDialog.actions.addLocalProject') : t('directoryExplorerDialog.actions.cloneRepository')}
-        </Button>
-        {isMobile ? (
           <Button size="xs" onClick={() => void finalizeSelection(targetPath)} disabled={isCloneMode ? !canSubmitClone : !canAddProject} className="flex-1">
             {submitActionLabel}
           </Button>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </>
   );
 

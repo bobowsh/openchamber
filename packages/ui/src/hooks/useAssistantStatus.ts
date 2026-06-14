@@ -5,6 +5,7 @@ import type { MessageStreamPhase } from '@/stores/types/sessionTypes';
 import { useSessionUIStore } from '@/sync/session-ui-store';
 import { useDirectorySync, useSessionPermissions, useSessionQuestions, useSessionStatus } from '@/sync/sync-context';
 import { isFullySyntheticMessage } from '@/lib/messages/synthetic';
+import { useI18n } from '@/lib/i18n';
 import { useCurrentSessionActivity } from './useSessionActivity';
 
 export type AssistantActivity = 'idle' | 'streaming' | 'tooling' | 'cooldown' | 'permission';
@@ -67,53 +68,12 @@ const EMPTY_MESSAGES: Message[] = [];
 const EMPTY_PARTS: Part[] = [];
 const STATUS_SIGNATURE_SEPARATOR = '\u0000';
 const EDITING_TOOLS = new Set(['edit', 'write', 'multiedit', 'apply_patch']);
-const TOOL_STATUS_PHRASES: Record<string, string> = {
-    read: 'reading file',
-    write: 'writing file',
-    edit: 'editing file',
-    multiedit: 'editing files',
-    apply_patch: 'applying patch',
-    bash: 'running command',
-    grep: 'searching content',
-    glob: 'finding files',
-    list: 'listing directory',
-    task: 'delegating task',
-    webfetch: 'fetching URL',
-    websearch: 'searching web',
-    codesearch: 'web code search',
-    todowrite: 'updating todos',
-    todoread: 'reading todos',
-    skill: 'learning skill',
-    question: 'asking question',
-    plan_enter: 'switching to planning',
-    plan_exit: 'switching to building',
-};
-const WORKING_PHRASES = [
-    'working',
-    'processing',
-    'preparing',
-    'warming up',
-    'gears turning',
-    'computing',
-    'calculating',
-    'analyzing',
-    'wheels spinning',
-    'calibrating',
-    'synthesizing',
-    'connecting dots',
-    'inspecting logic',
-    'weighing options',
-];
 
 type ParsedStatusResult = {
     activePartType: 'text' | 'tool' | 'reasoning' | 'editing' | undefined;
     activeToolName: string | undefined;
-    statusText: string;
+    statusKey: string;
     isGenericStatus: boolean;
-};
-
-const getToolStatusPhrase = (toolName: string): string => {
-    return TOOL_STATUS_PHRASES[toolName] ?? `using ${toolName}`;
 };
 
 const hashString = (value: string): number => {
@@ -124,8 +84,10 @@ const hashString = (value: string): number => {
     return Math.abs(hash);
 };
 
-const getStableWorkingPhrase = (key: string): string => {
-    return WORKING_PHRASES[hashString(key) % WORKING_PHRASES.length] ?? 'working';
+const WORKING_PHRASE_COUNT = 14;
+
+const getStableWorkingIndex = (key: string): number => {
+    return hashString(key) % WORKING_PHRASE_COUNT;
 };
 
 const createParsedStatus = (parts: Part[], genericKey: string): ParsedStatusResult => {
@@ -178,34 +140,34 @@ const createParsedStatus = (parts: Part[], genericKey: string): ParsedStatusResu
     }
 
     const isGenericStatus = activePartType === undefined;
-    const statusText = (() => {
-        if (activePartType === 'editing') return activeToolName === 'multiedit' ? getToolStatusPhrase(activeToolName) : 'editing file';
-        if (activePartType === 'tool' && activeToolName) return getToolStatusPhrase(activeToolName);
+    const statusKey = (() => {
+        if (activePartType === 'editing') return activeToolName === 'multiedit' ? 'editingFiles' : 'editingFile';
+        if (activePartType === 'tool' && activeToolName) return `tool.${activeToolName}`;
         if (activePartType === 'reasoning') return 'thinking';
         if (activePartType === 'text') return 'composing';
-        return getStableWorkingPhrase(genericKey);
+        return `working-${getStableWorkingIndex(genericKey)}`;
     })();
 
-    return { activePartType, activeToolName, statusText, isGenericStatus };
+    return { activePartType, activeToolName, statusKey, isGenericStatus };
 };
 
 const encodeParsedStatus = (status: ParsedStatusResult): string => {
     return [
         status.activePartType ?? '',
         status.activeToolName ?? '',
-        status.statusText,
+        status.statusKey,
         status.isGenericStatus ? '1' : '0',
     ].join(STATUS_SIGNATURE_SEPARATOR);
 };
 
 const decodeParsedStatus = (signature: string): ParsedStatusResult => {
-    const [activePartType, activeToolName, statusText = 'working', isGenericStatus] = signature.split(STATUS_SIGNATURE_SEPARATOR);
+    const [activePartType, activeToolName, statusKey = 'working', isGenericStatus] = signature.split(STATUS_SIGNATURE_SEPARATOR);
     return {
         activePartType: activePartType === 'text' || activePartType === 'tool' || activePartType === 'reasoning' || activePartType === 'editing'
             ? activePartType
             : undefined,
         activeToolName: activeToolName || undefined,
-        statusText,
+        statusKey,
         isGenericStatus: isGenericStatus === '1',
     };
 };
@@ -248,6 +210,7 @@ const getToolDisplayName = (part: ToolPart): string => {
 };
 
 export function useAssistantStatus(): AssistantStatusSnapshot {
+    const { t } = useI18n();
     const currentSessionId = useSessionUIStore((state) => state.currentSessionId);
     const currentSessionDirectory = useSessionUIStore((state) => state.currentSessionDirectory);
 
@@ -307,6 +270,20 @@ export function useAssistantStatus(): AssistantStatusSnapshot {
         return decodeParsedStatus(lastAssistantStatusSignature);
     }, [lastAssistantStatusSignature]);
 
+    const statusText = React.useMemo<string | null>(() => {
+        const key = parsedStatus.statusKey;
+        if (key.startsWith('tool.')) {
+            const toolName = key.slice(5);
+            const toolKey = `assistantStatus.tool.${toolName}`;
+            return t(toolKey as any) || t('assistantStatus.usingTool', { toolName });
+        }
+        if (key.startsWith('working-')) {
+            const index = parseInt(key.slice(8), 10);
+            return t(`assistantStatus.working.${index}` as any);
+        }
+        return t(`assistantStatus.${key}` as any) || null;
+    }, [parsedStatus.statusKey, t]);
+
     const abortState = React.useMemo(() => {
         const hasActiveAbort = Boolean(sessionAbortRecord && !sessionAbortRecord.acknowledged);
         return { wasAborted: hasActiveAbort, abortActive: hasActiveAbort };
@@ -356,7 +333,7 @@ export function useAssistantStatus(): AssistantStatusSnapshot {
             isStreaming,
             isCooldown,
             lifecyclePhase: isStreaming ? 'streaming' : isCooldown ? 'cooldown' : null,
-            statusText: isWorking ? parsedStatus.statusText : null,
+            statusText: isWorking ? statusText : null,
             isGenericStatus: isWorking ? parsedStatus.isGenericStatus : true,
             isWaitingForPermission: false,
             canAbort: isWorking,
@@ -369,7 +346,7 @@ export function useAssistantStatus(): AssistantStatusSnapshot {
             isComplete: false,
             retryInfo,
         };
-    }, [activityPhase, isPhaseWorking, parsedStatus, abortState, sessionRetryAttempt, sessionRetryNext]);
+    }, [activityPhase, isPhaseWorking, parsedStatus, abortState, sessionRetryAttempt, sessionRetryNext, statusText]);
 
     const forming = React.useMemo<FormingSummary>(() => {
         const isActive = isPhaseWorking && parsedStatus.activePartType === 'text';
@@ -404,12 +381,12 @@ export function useAssistantStatus(): AssistantStatusSnapshot {
 
         return {
             ...baseWorking,
-            statusText: 'waiting for permission',
+            statusText: t('assistantStatus.waitingPermission'),
             isWaitingForPermission: true,
             canAbort: false,
             retryInfo: null,
         };
-    }, [baseWorking, sessionPermissionRequests, sessionQuestionRequests]);
+    }, [baseWorking, sessionPermissionRequests, sessionQuestionRequests, t]);
 
     return {
         forming,
