@@ -4,7 +4,7 @@ import { RuntimeAPIContext } from '@/contexts/runtimeAPIContext';
 import { PatchDiff } from '@pierre/diffs/react';
 import { cn } from '@/lib/utils';
 import { SimpleMarkdownRenderer } from '../../MarkdownRenderer';
-import { getToolDisplayName, getToolMetadata } from '@/lib/toolHelpers';
+import { getToolDisplayName } from '@/lib/toolHelpers';
 import type { ToolPart as ToolPartType, ToolState as ToolStateUnion } from '@opencode-ai/sdk/v2';
 import { toolDisplayStyles } from '@/lib/typography';
 import { WorkerHighlightedCode } from '@/components/code/WorkerHighlightedCode';

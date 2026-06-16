@@ -52,7 +52,7 @@ export interface MagicPromptDefinition {
   id: MagicPromptId;
   title: string;
   description: string;
-  group: 'Git' | 'GitHub' | '规划' | '会话';
+  group: 'Git' | 'GitHub' | 'Session' | '规划' | '会话';
   template: string;
   placeholders?: Array<{ key: string; description: string }>;
 }

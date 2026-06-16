@@ -2467,12 +2467,15 @@ const setupAutoUpdater = () => {
   autoUpdater.disableWebInstaller = false;
   autoUpdater.logger = log;
 
-  const { owner, repo } = parseGithubRepo();
-  autoUpdater.setFeedURL({
-    provider: 'github',
-    owner,
-    repo,
-  });
+  const updateProvider = readSettingsRoot().desktopUpdateProvider || 'github';
+  const updateUrl = process.env.OPENCHAMBER_UPDATE_URL || readSettingsRoot().desktopUpdateUrl || '';
+
+  if (updateProvider === 'generic' && updateUrl) {
+    autoUpdater.setFeedURL({ provider: 'generic', url: updateUrl });
+  } else {
+    const { owner, repo } = parseGithubRepo();
+    autoUpdater.setFeedURL({ provider: 'github', owner, repo });
+  }
 
   autoUpdater.on('download-progress', (progress) => {
     const total = Number(progress.total || 0);

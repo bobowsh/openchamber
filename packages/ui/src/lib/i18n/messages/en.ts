@@ -2637,6 +2637,7 @@ export const dict = {
   'assistantStatus.tool.edit': 'Editing file',
   'assistantStatus.tool.multiedit': 'Editing files',
   'assistantStatus.tool.applyPatch': 'Applying patch',
+  'assistantStatus.tool.actor': 'Running subtask',
   'assistantStatus.tool.bash': 'Running command',
   'assistantStatus.tool.grep': 'Searching content',
   'assistantStatus.tool.glob': 'Finding files',

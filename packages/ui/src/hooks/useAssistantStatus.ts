@@ -6,6 +6,7 @@ import { useSessionUIStore } from '@/sync/session-ui-store';
 import { useDirectorySync, useSessionPermissions, useSessionQuestions, useSessionStatus } from '@/sync/sync-context';
 import { isFullySyntheticMessage } from '@/lib/messages/synthetic';
 import { useI18n } from '@/lib/i18n';
+import type { I18nKey } from '@/lib/i18n';
 import { useCurrentSessionActivity } from './useSessionActivity';
 
 export type AssistantActivity = 'idle' | 'streaming' | 'tooling' | 'cooldown' | 'permission';
@@ -275,13 +276,13 @@ export function useAssistantStatus(): AssistantStatusSnapshot {
         if (key.startsWith('tool.')) {
             const toolName = key.slice(5);
             const toolKey = `assistantStatus.tool.${toolName}`;
-            return t(toolKey as any) || t('assistantStatus.usingTool', { toolName });
+            return t(toolKey as I18nKey) || t('assistantStatus.usingTool', { toolName });
         }
         if (key.startsWith('working-')) {
             const index = parseInt(key.slice(8), 10);
-            return t(`assistantStatus.working.${index}` as any);
+            return t(`assistantStatus.working.${index}` as I18nKey);
         }
-        return t(`assistantStatus.${key}` as any) || null;
+        return t(`assistantStatus.${key}` as I18nKey) || null;
     }, [parsedStatus.statusKey, t]);
 
     const abortState = React.useMemo(() => {

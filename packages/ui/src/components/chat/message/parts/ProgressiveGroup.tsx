@@ -13,7 +13,7 @@ import { Text } from '@/components/ui/text';
 import { Icon } from "@/components/icon/Icon";
 import { FadeInOnReveal } from '../FadeInOnReveal';
 import { getToolIcon } from './toolPresentation';
-import { getToolDisplayName, getToolMetadata } from '@/lib/toolHelpers';
+import { getToolDisplayName } from '@/lib/toolHelpers';
 import { useI18n } from '@/lib/i18n';
 import { isExpandableTool, isStandaloneTool, isStaticTool } from './toolRenderUtils';
 import { RuntimeAPIContext } from '@/contexts/runtimeAPIContext';
