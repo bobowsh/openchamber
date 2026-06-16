@@ -32,6 +32,7 @@ export type MagicPromptId =
   | 'session.reviewHandoff.visible'
   | 'session.reviewHandoff.instructions'
   | 'session.reviewSession.visible'
+  | 'session.reviewSessionWithoutHandoff.visible'
   | 'session.reviewFeedbackToImplementer.visible'
   | 'session.implementationResponseToReviewer.visible'
   | 'session.plan.visible'
@@ -650,6 +651,17 @@ diff 是唯一真实来源。也要阅读 diff 周围的代码，而不仅仅是
 关注正确性、回归、缺失的实现、缺失的测试以及实现是否满足所述意图。为实施变更的代理提供简洁、可操作的反馈。
 
 {{handoff}}`,
+  },
+  {
+    id: 'session.reviewSessionWithoutHandoff.visible',
+    title: 'Review Session Starter Prompt Without Handoff',
+    group: 'Session',
+    description: 'Visible user message sent to a generated review session when no implementation handoff is generated first.',
+    template: `Please review the current workspace changes.
+
+There is no generated implementation handoff. Infer the likely user intent from the current diff, recent session context if available, changed files, and surrounding code. Judge whether the implementation is correct for that inferred intent, and call out uncertainty explicitly when intent cannot be recovered.
+
+Focus on correctness, regressions, missing implementation, missing tests, and whether the implementation is the smallest maintainable way to satisfy the likely goal. Provide concise, actionable feedback for the agent implementing the changes.`,
   },
   {
     id: 'session.reviewFeedbackToImplementer.visible',

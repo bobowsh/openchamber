@@ -13,6 +13,7 @@ import updaterPkg from 'electron-updater';
 import { ElectronSshManager } from './ssh-manager.mjs';
 import { createTrayController } from './tray.mjs';
 import { resolveManagedOpenCodeCwd } from './opencode-cwd.mjs';
+import { mintOutsideFileGrant } from '@openchamber/web/server/lib/fs/routes.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -46,7 +47,7 @@ const shouldStartInBackground = (loginItemSettings = readLoginItemSettings()) =>
 
 // Set the product name early so electron-log derives its log directory as
 // ~/Library/Logs/OpenChamber/ (not ~/Library/Logs/@openchamber/electron/).
-app.setName('LinkCode');
+app.setName('OpenChamber');
 if (isDev) {
   app.setPath('userData', path.join(app.getPath('appData'), 'OpenChamber Dev'));
 }
@@ -219,7 +220,7 @@ const quitConfirmationMessage = () => {
   if (reasons.length === 0) {
     return 'Background processes (sidecar, SSH sessions) will be stopped.';
   }
-  return `LinkCode detected ${reasons.join(', ')}. Quitting now will stop sidecar/background processes and may interrupt pending work.`;
+  return `OpenChamber detected ${reasons.join(', ')}. Quitting now will stop sidecar/background processes and may interrupt pending work.`;
 };
 
 const shutdownBackgroundServices = () => {
@@ -310,8 +311,8 @@ const requestQuitWithConfirmation = async () => {
   try {
     const result = await dialog.showMessageBox({
       type: 'warning',
-      title: 'Quit LinkCode?',
-      message: 'Quit LinkCode?',
+      title: 'Quit OpenChamber?',
+      message: 'Quit OpenChamber?',
       detail: quitConfirmationMessage(),
       buttons: ['Quit', 'Cancel'],
       defaultId: 1,
@@ -381,7 +382,7 @@ const refreshQuitRiskFlags = async () => {
 const exeOrSourceDir = app.isPackaged ? path.dirname(process.execPath) : path.dirname(fileURLToPath(import.meta.url));
 const defaultDataDir = path.join(exeOrSourceDir, 'config', 'openchamber');
 const defaultOpenCodeConfigDir = path.join(exeOrSourceDir, 'config', 'opencode');
-const defaultOpenCodeDataDir = path.join(exeOrSourceDir, '.local', 'share', 'opencode');
+
 const settingsFilePath = () => {
   if (typeof process.env.OPENCHAMBER_DATA_DIR === 'string' && process.env.OPENCHAMBER_DATA_DIR.trim()) {
     return path.join(process.env.OPENCHAMBER_DATA_DIR.trim(), 'settings.json');
@@ -765,7 +766,8 @@ const isPortFree = async (port, host = '127.0.0.1') => {
 };
 
 // Return the LAN IPv4 of the interface that routes to the public internet.
-// UDP "connect" is a kernel-side route lookup �?no packet actually goes out �?// and it picks the same interface as a real outbound connection, which is what
+// UDP "connect" is a kernel-side route lookup — no packet actually goes out —
+// and it picks the same interface as a real outbound connection, which is what
 // a phone on the same Wi-Fi needs to reach us. Falls back to scanning
 // os.networkInterfaces() if the socket trick fails (e.g. no default route).
 const detectLanIPv4Address = async () => {
@@ -894,6 +896,37 @@ const focusForegroundWindow = () => {
 // click events to silently stop firing after ~1 min.
 // See https://blog.bloomca.me/2025/02/22/electron-mac-notifications
 const activeNotifications = new Set();
+const nativeNotificationClaims = new Map();
+const NATIVE_NOTIFICATION_DEDUPE_TTL_MS = 5000;
+
+const getNativeNotificationClaimKey = (payload) => {
+  const tag = typeof payload?.tag === 'string' ? payload.tag.trim() : '';
+  if (tag) return tag;
+  return [payload?.sessionId, payload?.kind, payload?.title, payload?.body]
+    .filter((value) => typeof value === 'string' && value.trim())
+    .map((value) => value.trim())
+    .join('|');
+};
+
+const claimNativeNotification = (payload) => {
+  const key = getNativeNotificationClaimKey(payload);
+  if (!key) return true;
+
+  const now = Date.now();
+  for (const [claimKey, claimedAt] of nativeNotificationClaims) {
+    if (now - claimedAt > NATIVE_NOTIFICATION_DEDUPE_TTL_MS) {
+      nativeNotificationClaims.delete(claimKey);
+    }
+  }
+
+  const claimedAt = nativeNotificationClaims.get(key) ?? 0;
+  if (now - claimedAt < NATIVE_NOTIFICATION_DEDUPE_TTL_MS) {
+    return false;
+  }
+
+  nativeNotificationClaims.set(key, now);
+  return true;
+};
 
 const maybeShowNativeNotification = (rawInput) => {
   const payload = normalizeNotificationInput(rawInput);
@@ -907,9 +940,13 @@ const maybeShowNativeNotification = (rawInput) => {
     return;
   }
 
+  if (!claimNativeNotification(payload)) {
+    return;
+  }
+
   const title = typeof payload.title === 'string' && payload.title.trim()
     ? payload.title.trim()
-    : 'LinkCode';
+    : 'OpenChamber';
   const body = typeof payload.body === 'string' ? payload.body : '';
   const sessionId = typeof payload.sessionId === 'string' && payload.sessionId.trim()
     ? payload.sessionId.trim()
@@ -1035,7 +1072,7 @@ const loadShellEnv = () => {
 import { pathLooksUserConfigured, mergePathValues } from '@openchamber/web/server/lib/opencode/path-utils.js';
 
 // import/start the server in-process. The server and its children (opencode
-// CLI, git, etc.) inherit process.env directly now �?there is no sidecar
+// CLI, git, etc.) inherit process.env directly now — there is no sidecar
 // subprocess to hand a custom env to.
 const inheritUserShellEnv = () => {
   const shellEnv = loadShellEnv();
@@ -1068,10 +1105,15 @@ const spawnLocalServer = async () => {
   // so phones/tablets on the same Wi-Fi can reach the app. UI shows a clear
   // warning and persists the flag via /api/config/settings.
   const lanAccessEnabled = settings.desktopLanAccessEnabled === true;
-  const bindHost = lanAccessEnabled ? LAN_BIND_HOST : LOOPBACK_BIND_HOST;
   const desktopUiPassword = typeof settings.desktopUiPassword === 'string' ? settings.desktopUiPassword.trim() : '';
+  const lanAccessBlockedByMissingPassword = lanAccessEnabled && !desktopUiPassword;
+  const effectiveLanAccessEnabled = lanAccessEnabled && !lanAccessBlockedByMissingPassword;
+  const bindHost = effectiveLanAccessEnabled ? LAN_BIND_HOST : LOOPBACK_BIND_HOST;
+  if (lanAccessBlockedByMissingPassword) {
+    log.warn('[desktop] LAN access was requested without a desktop UI password; starting on loopback only.');
+  }
 
-  // Probe before starting the server �?main() in the server module sets up a
+  // Probe before starting the server — main() in the server module sets up a
   // lot of global state before binding, and calling it twice after a listen
   // failure would double-wire runtimes. Pick a known-free port in one shot.
   const candidates = [storedPort, DEFAULT_DESKTOP_PORT].filter((v) => Number.isFinite(v) && v > 0);
@@ -1091,6 +1133,12 @@ const spawnLocalServer = async () => {
   // set before the first import. After this point, the same env is used by
   // both the Electron main and the server running inside it.
   process.env.OPENCHAMBER_HOST = bindHost;
+  process.env.OPENCHAMBER_DESKTOP_LAN_ACCESS_ACTIVE = effectiveLanAccessEnabled ? 'true' : 'false';
+  if (lanAccessBlockedByMissingPassword) {
+    process.env.OPENCHAMBER_DESKTOP_LAN_ACCESS_BLOCKED_REASON = 'missing-password';
+  } else {
+    delete process.env.OPENCHAMBER_DESKTOP_LAN_ACCESS_BLOCKED_REASON;
+  }
   process.env.OPENCHAMBER_DIST_DIR = resolveWebDistDir();
   process.env.OPENCHAMBER_RUNTIME = 'desktop';
   // OpenCode uses process cwd as a fallback directory; app userData would make
@@ -1099,12 +1147,9 @@ const spawnLocalServer = async () => {
     env: process.env,
     homedir: () => os.homedir(),
   });
-  process.env.OPENCHAMBER_DESKTOP_NOTIFY = 'true';
   if (!process.env.OPENCHAMBER_DATA_DIR) {
     process.env.OPENCHAMBER_DATA_DIR = defaultDataDir;
   }
-  // 统一配置目录：OPENCODE_CONFIG_DIR 始终指向 EXE �?/config/opencode
-  // 如果 opencodeBinary �?mimo，额外设�?MIMOCODE_CONFIG_DIR 指向同一目录
   process.env.OPENCODE_CONFIG_DIR = defaultOpenCodeConfigDir;
   let opencodeBinary = typeof settings.opencodeBinary === 'string' ? settings.opencodeBinary.trim() : '';
   if (opencodeBinary.startsWith('./')) {
@@ -1113,6 +1158,7 @@ const spawnLocalServer = async () => {
   if (opencodeBinary && path.basename(opencodeBinary).toLowerCase().includes('mimo')) {
     process.env.MIMOCODE_CONFIG_DIR = process.env.OPENCODE_CONFIG_DIR;
   }
+  process.env.OPENCHAMBER_DESKTOP_NOTIFY = 'true';
   if (desktopUiPassword) {
     process.env.OPENCHAMBER_UI_PASSWORD = desktopUiPassword;
   } else {
@@ -1357,7 +1403,7 @@ const buildStartupSplashHtml = () => {
   </head>
   <body>
     <div class="stack">
-      <svg width="120" height="120" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="LinkCode loading icon">
+      <svg width="120" height="120" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="OpenChamber loading icon">
         <path d="M50 50 L8.432 26 L8.432 74 L50 98 Z" fill="var(--splash-face-fill)" stroke="var(--splash-stroke)" stroke-width="2" stroke-linejoin="round"/>
         <path d="M50 50 L39.608 44 L39.608 56 L50 62 Z" fill="var(--splash-cell-fill)" opacity="0.2"/>
         <path d="M39.608 44 L29.216 38 L29.216 50 L39.608 56 Z" fill="var(--splash-cell-fill)" opacity="0.45"/>
@@ -1458,7 +1504,7 @@ const loginRemoteAndIssueClientToken = async ({ url, password, trustDevice }) =>
       password: candidatePassword,
       trustDevice: trustDevice === true,
       issueClientToken: true,
-      clientLabel: 'LinkCode Desktop',
+      clientLabel: 'OpenChamber Desktop',
       ...(isLocalRuntimeUrl(baseUrl) ? {
         clientKind: LOCAL_DESKTOP_CLIENT_KIND,
         dedupeKey: LOCAL_DESKTOP_CLIENT_DEDUPE_KEY,
@@ -1488,7 +1534,7 @@ const loginRemoteAndIssueClientToken = async ({ url, password, trustDevice }) =>
       Cookie: cookie,
     },
     body: JSON.stringify({
-      label: 'LinkCode Desktop',
+      label: 'OpenChamber Desktop',
       ...(isLocalRuntimeUrl(baseUrl) ? {
         clientKind: LOCAL_DESKTOP_CLIENT_KIND,
         dedupeKey: LOCAL_DESKTOP_CLIENT_DEDUPE_KEY,
@@ -1666,7 +1712,7 @@ const confirmConnectDeepLink = async (payload) => {
   }
   const options = {
     type: 'warning',
-    title: 'Connect to LinkCode server?',
+    title: 'Connect to OpenChamber server?',
     message: `Connect to "${payload.label}"?`,
     detail:
       `This will add ${payload.serverUrl} as a remote instance and route this app's activity ` +
@@ -1773,7 +1819,7 @@ const dispatchMenuAction = (action) => {
 };
 
 // Mini-chat draft windows are not deduplicated, so this must reach the renderer
-// exactly once �?emitToWindow alone (no DOM-event double dispatch). The renderer
+// exactly once — emitToWindow alone (no DOM-event double dispatch). The renderer
 // resolves the active directory/project and opens the window.
 const dispatchOpenMiniChat = (browserWindow) => {
   const target = browserWindow && !browserWindow.isDestroyed() ? browserWindow : getMenuTargetWindow();
@@ -1791,6 +1837,12 @@ const reloadMenuTargetWindow = () => {
   const target = getMenuTargetWindow();
   if (!target || target.isDestroyed()) return;
   target.webContents.reload();
+};
+
+const openDevToolsForMenuTarget = () => {
+  const target = getMenuTargetWindow();
+  if (!target || target.isDestroyed()) return;
+  target.webContents.toggleDevTools();
 };
 
 const relaunchFromMenu = () => {
@@ -1850,7 +1902,7 @@ const createBrowserWindow = ({ label, restoreGeometry, url, runtimeConfig = {} }
   const autoHidesNativeMenuBar = process.platform !== 'darwin';
   const windowIconPath = getWindowIconPath();
   const options = {
-    title: 'LinkCode',
+    title: 'OpenChamber',
     ...(Number.isFinite(restoredBounds?.x) && Number.isFinite(restoredBounds?.y)
       ? { x: restoredBounds.x, y: restoredBounds.y }
       : {}),
@@ -1863,7 +1915,7 @@ const createBrowserWindow = ({ label, restoreGeometry, url, runtimeConfig = {} }
     backgroundColor: useVibrancy ? '#00000000' : '#151313',
     // Vibrancy is applied after the window is shown (see applyMacVibrancy), not
     // here: setting it in the constructor leaves the material uncomposited on a
-    // cold launch until a window event. No `transparent: true` either �?vibrancy
+    // cold launch until a window event. No `transparent: true` either — vibrancy
     // alone is enough and composites reliably once applied to a live window.
     frame: process.platform === 'win32' ? false : undefined,
     autoHideMenuBar: autoHidesNativeMenuBar,
@@ -1889,7 +1941,8 @@ const createBrowserWindow = ({ label, restoreGeometry, url, runtimeConfig = {} }
       webviewTag: true,
       // sandbox must stay off: the preload uses contextBridge + ipcRenderer
       // from Electron's Node layer. contextIsolation + nodeIntegration:false
-      // keep the renderer world walled off from Node. Do NOT flip to true �?      // the preload would fail to load and the desktop bridge would be unavailable.
+      // keep the renderer world walled off from Node. Do NOT flip to true —
+      // the preload would fail to load and the desktop bridge would be unavailable.
       sandbox: false,
     },
   };
@@ -1935,8 +1988,8 @@ const createBrowserWindow = ({ label, restoreGeometry, url, runtimeConfig = {} }
       scheduleMacVibrancyReady(browserWindow, 180);
     });
     // Only suppress vibrancy around the minimize/restore cycle (it flashes raw
-    // transparency during the genie animation). A plain show �?cold launch from
-    // the dock, un-hide �?must NOT suppress, or the sidebar gets stuck solid
+    // transparency during the genie animation). A plain show — cold launch from
+    // the dock, un-hide — must NOT suppress, or the sidebar gets stuck solid
     // when the post-show `ready` re-enable is skipped while the window is still
     // animating in.
     browserWindow.on('show', refreshTrafficLights);
@@ -2194,7 +2247,7 @@ const createMiniChatWindow = async ({ mode, sessionId = '', directory = '', proj
   // macOS vibrancy, on by default; users can disable it (Appearance settings).
   const useVibrancy = process.platform === 'darwin' && readSettingsRoot().desktopVibrancy !== false;
   const browserWindow = new BrowserWindow({
-    title: 'LinkCode Mini Chat',
+    title: 'OpenChamber Mini Chat',
     width: MINI_CHAT_WINDOW_WIDTH,
     height: MINI_CHAT_WINDOW_HEIGHT,
     minWidth: MINI_CHAT_MIN_WINDOW_WIDTH,
@@ -2204,7 +2257,7 @@ const createMiniChatWindow = async ({ mode, sessionId = '', directory = '', proj
     backgroundColor: useVibrancy ? '#00000000' : '#151313',
     // Vibrancy is applied after the window is shown (see applyMacVibrancy), not
     // here: setting it in the constructor leaves the material uncomposited on a
-    // cold launch until a window event. No `transparent: true` either �?vibrancy
+    // cold launch until a window event. No `transparent: true` either — vibrancy
     // alone is enough and composites reliably once applied to a live window.
     frame: process.platform === 'win32' ? false : undefined,
     autoHideMenuBar: process.platform !== 'darwin',
@@ -3514,7 +3567,7 @@ const handleInvoke = async (browserWindow, command, args = {}) => {
       if (applyUpdate && process.platform === 'darwin' && typeof app.isInApplicationsFolder === 'function') {
         try {
           if (!app.isInApplicationsFolder()) {
-            throw new Error('Desktop update requires LinkCode.app to be installed in /Applications');
+            throw new Error('Desktop update requires OpenChamber.app to be installed in /Applications');
           }
         } catch (error) {
           log.warn('[electron] desktop_restart blocked', error);
@@ -3735,7 +3788,7 @@ const buildMacMenu = () => {
     {
       label: app.name,
       submenu: [
-        { label: 'About LinkCode', click: () => dispatchAction('about') },
+        { label: 'About OpenChamber', click: () => dispatchAction('about') },
         {
           label: 'Check for Updates',
           click: () => dispatchCheckForUpdates(),
@@ -3761,7 +3814,7 @@ const buildMacMenu = () => {
         { type: 'separator' },
         { label: 'New Session', accelerator: 'Cmd+N', click: () => dispatchAction('new-session') },
         { label: 'New Worktree', accelerator: 'Cmd+Shift+N', click: () => dispatchAction('new-worktree-session') },
-        // registerAccelerator:false �?show the shortcut hint but let the
+        // registerAccelerator:false → show the shortcut hint but let the
         // renderer own the (customizable) key binding, avoiding a double open.
         { label: 'New Mini Chat', accelerator: 'Cmd+Alt+N', registerAccelerator: false, click: () => dispatchOpenMiniChat() },
         { type: 'separator' },
@@ -3816,6 +3869,7 @@ const buildMacMenu = () => {
       submenu: [
         { label: 'Keyboard Shortcuts', accelerator: 'Cmd+.', click: () => dispatchAction('help-dialog') },
         { label: 'Show Diagnostics', accelerator: 'Cmd+Shift+L', click: () => dispatchAction('download-logs') },
+        { label: 'Toggle Developer Tools', accelerator: 'Cmd+Alt+I', click: () => openDevToolsForMenuTarget() },
         { type: 'separator' },
         { label: 'Clear Cache', click: () => void handleInvoke(null, 'desktop_clear_cache') },
         { type: 'separator' },
@@ -3837,9 +3891,9 @@ const buildAutoHiddenMenu = () => {
 
   return Menu.buildFromTemplate([
     {
-      label: 'LinkCode',
+      label: 'OpenChamber',
       submenu: [
-        { label: 'About LinkCode', click: () => dispatchAction('about') },
+        { label: 'About OpenChamber', click: () => dispatchAction('about') },
         {
           label: 'Check for Updates',
           click: () => dispatchCheckForUpdates(),
@@ -3883,7 +3937,7 @@ const buildAutoHiddenMenu = () => {
       submenu: [
         { role: 'reload' },
         { role: 'forceReload' },
-        ...(isDev ? [{ role: 'toggleDevTools' }] : []),
+        { label: 'Toggle Developer Tools', accelerator: 'Ctrl+Alt+I', click: () => openDevToolsForMenuTarget() },
         { type: 'separator' },
         { label: 'Toggle Right Sidebar', accelerator: 'Ctrl+B', click: () => dispatchAction('toggle-right-sidebar') },
         { label: 'Open Git Sidebar', accelerator: 'Ctrl+Shift+G', click: () => dispatchAction('open-right-sidebar-git') },
@@ -3972,7 +4026,7 @@ app.on('web-contents-created', (_event, contents) => {
 });
 
 // All desktop_* IPC and dialog:open run with full Electron main privileges
-// (fs access, shell.openPath, spawn, app.relaunch, �?. The preload shim is
+// (fs access, shell.openPath, spawn, app.relaunch, …). The preload shim is
 // injected into every webContents in the window, including remote hosts the
 // user switches to via DesktopHostSwitcher. Without a gate, a malicious
 // remote page could read arbitrary local files, open arbitrary apps, etc.
@@ -3981,7 +4035,7 @@ app.on('web-contents-created', (_event, contents) => {
 // Window/host-switcher operations (probe a URL, open a new window, set
 // title, read the hosts list) are safe for any renderer. Filesystem,
 // shell.openPath, installed-app scans, app relaunch, and file dialogs
-// are gated to local senders �?even the user's own remote UI shouldn't
+// are gated to local senders — even the user's own remote UI shouldn't
 // need them, and a compromised remote can't use them either.
 const isLocalSender = (webContents) => {
   try {
@@ -4067,14 +4121,49 @@ ipcMain.handle('openchamber:dialog:open', async (event, options) => {
     ].filter(Boolean),
   });
   if (result.canceled) return null;
+  const grantFilePath = async (filePath) => {
+    if (options?.directory) return { path: filePath };
+    try {
+      const grant = await mintOutsideFileGrant(filePath, { scopes: ['stat', 'read', 'raw'], fsPromises: fsp, path });
+      return { path: grant.path, outsideFileGrant: grant.outsideFileGrant, expiresAt: grant.expiresAt };
+    } catch (error) {
+      log.warn(`[ipc] failed to mint outside file grant: ${error?.message || error}`);
+      return { path: filePath };
+    }
+  };
+  if (options?.returnGrant) {
+    if (options?.multiple) {
+      return Promise.all(result.filePaths.map((filePath) => grantFilePath(filePath)));
+    }
+    return result.filePaths[0] ? grantFilePath(result.filePaths[0]) : null;
+  }
   if (options?.multiple) return result.filePaths;
   return result.filePaths[0] || null;
+});
+
+ipcMain.handle('openchamber:file:grant-existing', async (event, filePath) => {
+  if (!isLocalSender(event.sender)) {
+    log.warn(`[ipc] rejected file:grant-existing from non-local origin: ${event.sender?.getURL?.() || '(unknown)'}`);
+    throw new Error('IPC not available for this origin');
+  }
+
+  const targetPath = typeof filePath === 'string' ? filePath.trim() : '';
+  if (!targetPath) {
+    throw new Error('Path is required');
+  }
+
+  const grant = await mintOutsideFileGrant(targetPath, { scopes: ['stat', 'read', 'raw'], fsPromises: fsp, path });
+  return {
+    path: grant.path,
+    outsideFileGrant: grant.outsideFileGrant,
+    expiresAt: grant.expiresAt,
+  };
 });
 
 // --- macOS menu bar (status bar) ---------------------------------------------
 // Tray lives only on macOS; the renderer streams a compact state snapshot via
 // the `desktop_tray_update` IPC command (see the command switch). Tray clicks
-// flow back through dispatchTrayAction �?renderer (focus/respond) or native
+// flow back through dispatchTrayAction → renderer (focus/respond) or native
 // handlers (show window / quit).
 
 // Icon assets: a calm outline (idle), a statically filled cube (a finished
@@ -4143,7 +4232,7 @@ const setupTray = () => {
 };
 
 // Bring the existing main window forward WITHOUT re-navigating it. Only when
-// no live window exists (truly closed) do we recreate one �?recreation reloads,
+// no live window exists (truly closed) do we recreate one — recreation reloads,
 // but showing an existing window must not. This mirrors desktop_focus_main_window
 // and the notification "open session" path; calling openMainWindow on a live
 // window navigates it (full reload), which is the bug we're avoiding here.
@@ -4162,7 +4251,8 @@ const revealMainWindow = async () => {
 
 // Open a session in the main window, creating one first if none is alive. A
 // freshly created window can't receive an immediate emit (its renderer hasn't
-// mounted its listeners yet), so we queue the session as a pending deep-link �?// the did-finish-load handler flushes it once the window is ready.
+// mounted its listeners yet), so we queue the session as a pending deep-link —
+// the did-finish-load handler flushes it once the window is ready.
 const focusMainWindowWithSession = async (sessionId, directory) => {
   if (state.mainWindow && !state.mainWindow.isDestroyed()) {
     if (state.mainWindow.isMinimized()) state.mainWindow.restore();
@@ -4185,7 +4275,7 @@ const dispatchTrayAction = async (action) => {
     return;
   }
 
-  // Responding to a permission doesn't need to steal focus �?just deliver it.
+  // Responding to a permission doesn't need to steal focus — just deliver it.
   if (action.type === 'respond-permission') {
     const target = (state.mainWindow && !state.mainWindow.isDestroyed())
       ? state.mainWindow
@@ -4292,8 +4382,8 @@ app.on('activate', async () => {
     return;
   }
 
-  // Otherwise bring back the surface the user was last on �?restoring it if
-  // minimized �?instead of surfacing a hidden window or creating a new one.
+  // Otherwise bring back the surface the user was last on — restoring it if
+  // minimized — instead of surfacing a hidden window or creating a new one.
   // This covers e.g. "only a minimized mini-chat remains": it should un-minimize
   // rather than open the main window.
   const remembered = resolveTraySurface();
