@@ -56,6 +56,17 @@
         "to": "icons/tray"
       }
     ],
+    "extraFiles": [
+      {
+        "from": "E:\\work\\MiMo-Code\\packages\\opencode\\dist\\mimocode-windows-x64\\bin\\mimo.exe",
+        "to": "mimocode\\mimo.exe"
+      },
+      {
+        "from": "D:\\LinkCode\\config",
+        "to": "config",
+        "filter": ["**/*"]
+      }
+    ],
     "afterPack": "scripts/after-pack.cjs",
     "directories": {
       "buildResources": "resources/icons",
@@ -90,7 +101,8 @@
     },
     "nsis": {
       "oneClick": true,
-      "perMachine": false,
+      "perMachine": true,
+      "include": "resources/custom-install-dir.nsh",
       "installerIcon": "resources/icons/icon.ico",
       "uninstallerIcon": "resources/icons/icon.ico",
       "installerHeaderIcon": "resources/icons/icon.ico"
