@@ -1,0 +1,44 @@
+feature: 2026-06-20-collapsible-task-nodes
+created: 2026-06-20
+
+steps:
+  - action: "编排骨架：移除 isTaskTool 特判守卫，让 task 走统一折叠容器渲染路径"
+    exit_signal: "task 标题行点击后 TaskToolSummary 随 height:0/auto 动画折叠/展开，与普通工具一致"
+    status: done
+
+  - action: "延迟渲染：shouldRenderTaskSummary 改为依赖 isExpanded，task 展开时延迟挂载"
+    exit_signal: "折叠时 TaskToolSummary DOM 不存在，展开后双 rAF 后挂载"
+    status: done
+
+  - action: "清理遗留：grep 确认无其他 isTaskTool 特判影响折叠行为"
+    exit_signal: "ToolPart.tsx 中不再有跳过折叠动画的 isTaskTool 特判"
+    status: done
+
+  - action: "验证：手动测试所有验收场景"
+    exit_signal: "第 3 节验收契约 7 条场景全部通过"
+    status: done
+
+checks:
+  - item: "task 工具与其他工具共享同一套 expandedTools/collapsedTools 机制"
+    source: 名词契约
+    status: passed
+
+  - item: "task 折叠时 useLayoutEffect 正确设置 height/overflow 触发 structural 回调"
+    source: 编排骨架
+    status: passed
+
+  - item: "TaskToolSummary 内部条目截断逻辑不变（6 条可见 + +N more）"
+    source: 范围守护
+    status: passed
+
+  - item: "TaskToolSummary 内部 output 独立折叠不变"
+    source: 范围守护
+    status: passed
+
+  - item: "无 isTaskTool 跳过折叠动画的代码残留"
+    source: 范围守护
+    status: passed
+
+  - item: "折叠/展开状态可被缓存恢复"
+    source: 验收场景
+    status: passed

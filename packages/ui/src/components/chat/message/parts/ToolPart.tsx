@@ -2000,10 +2000,6 @@ const ToolPartContent: React.FC<ToolPartProps> = ({
     const expandedContentRef = React.useRef<HTMLDivElement>(null);
 
     React.useLayoutEffect(() => {
-        if (isTaskTool) {
-            return;
-        }
-
         const element = expandedContentRef.current;
         if (!element) {
             return;
@@ -2669,7 +2665,7 @@ const ToolPartContent: React.FC<ToolPartProps> = ({
 
     const iconStyle = !isTaskTool && isError ? TOOL_ERROR_ICON_STYLE : TOOL_NORMAL_ICON_STYLE;
     const titleStyle = !isTaskTool && isError ? TOOL_ERROR_TITLE_STYLE : TOOL_NORMAL_TITLE_STYLE;
-    const shouldRenderTaskSummary = useDeferredExpandedContent(isTaskTool && (taskSummaryEntries.length > 0 || isActive || shouldTreatAsFinalized || !!taskSessionId));
+    const shouldRenderTaskSummary = useDeferredExpandedContent(isTaskTool && isExpanded && (taskSummaryEntries.length > 0 || isActive || shouldTreatAsFinalized || !!taskSessionId));
     const shouldRenderExpandedContent = useDeferredExpandedContent(!isTaskTool && isExpanded);
 
     if (!shouldTreatAsFinalized && !isActive && !isTaskTool) {
@@ -2802,51 +2798,47 @@ const ToolPartContent: React.FC<ToolPartProps> = ({
                 )}
             </div>
 
-            {}
-            {shouldRenderTaskSummary ? (
-                <TaskToolSummary
-                    entries={taskSummaryEntries}
-                    isExpanded={isExpanded}
-                    isMobile={isMobile}
-                    output={taskOutputString}
-                    sessionId={taskSessionId}
-                    onShowPopup={onShowPopup}
-                    input={input}
-                    animateTailText={animateTailText}
-                    isActive={isActive}
-                />
-            ) : null}
-
-            {!isTaskTool ? (
-                <div
-                    ref={expandedContentRef}
-                    aria-hidden={!isExpanded}
-                    style={{
-                        height: isExpanded ? 'auto' : '0px',
-                        overflow: isExpanded ? 'visible' : 'hidden',
-                        overflowAnchor: 'none',
-                    }}
-                >
-                    {shouldRenderExpandedContent ? (
-                        <div
-                            className="relative ml-2 pl-3"
-                        >
-                            <span
-                                aria-hidden="true"
-                                className="pointer-events-none absolute left-0 top-px bottom-0 w-px"
-                                style={{ backgroundColor: 'var(--tools-border)' }}
-                            />
-                            <ToolExpandedContent
-                                part={part}
-                                state={state}
-                                currentDirectory={currentDirectory}
-                                isExpanded={isExpanded}
-                                onShowPopup={onShowPopup}
-                            />
-                        </div>
-                    ) : null}
-                </div>
-            ) : null}
+            <div
+                ref={expandedContentRef}
+                aria-hidden={!isExpanded}
+                style={{
+                    height: isExpanded ? 'auto' : '0px',
+                    overflow: isExpanded ? 'visible' : 'hidden',
+                    overflowAnchor: 'none',
+                }}
+            >
+                {shouldRenderTaskSummary ? (
+                    <TaskToolSummary
+                        entries={taskSummaryEntries}
+                        isExpanded={isExpanded}
+                        isMobile={isMobile}
+                        output={taskOutputString}
+                        sessionId={taskSessionId}
+                        onShowPopup={onShowPopup}
+                        input={input}
+                        animateTailText={animateTailText}
+                        isActive={isActive}
+                    />
+                ) : null}
+                {shouldRenderExpandedContent ? (
+                    <div
+                        className="relative ml-2 pl-3"
+                    >
+                        <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute left-0 top-px bottom-0 w-px"
+                            style={{ backgroundColor: 'var(--tools-border)' }}
+                        />
+                        <ToolExpandedContent
+                            part={part}
+                            state={state}
+                            currentDirectory={currentDirectory}
+                            isExpanded={isExpanded}
+                            onShowPopup={onShowPopup}
+                        />
+                    </div>
+                ) : null}
+            </div>
         </div>
     );
 };
